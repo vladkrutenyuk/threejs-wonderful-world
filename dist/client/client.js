@@ -78,6 +78,8 @@ function onKeyDown(event) {
             scaleMap(-step);
             break;
     }
+    const div = document.getElementById('help-container');
+    div.innerHTML = event.keyCode;
 }
 ;
 function moveMap(step) {
