@@ -189,7 +189,7 @@ function animate () {
 
     render()
 
-    stats.update()
+    // stats.update()
 }
 
 function render() {
