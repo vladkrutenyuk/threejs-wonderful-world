@@ -101,7 +101,11 @@ function onKeyDown (event) {
         case 69: // e
             scaleMap(-step)
             break;
-    }   
+    }
+
+    const div = document.getElementById('help-container');
+
+    div.innerHTML = event.keyCode;
 };
 
 function moveMap(step : Vector2) {
