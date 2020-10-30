@@ -25,6 +25,21 @@ scene.add(sightLight);
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.addEventListener('change', render)
 
+fetch("shaders/fragment.glsl")
+    .then( r => r.text() )
+    .then( t => console.log(t))
+fetch("shaders/vertex.glsl")
+    .then( r => r.text() )
+    .then( t => console.log(t))
+
+const vshader: string = ""
+const fshader: string = ""
+
+// const obj = new Mesh(new BoxGeometry(), new ShaderMaterial({
+//     vertexShader: vshader,
+//     fragmentShader: fshader
+// }))
+
 const planeGeometry = new PlaneGeometry(
     3.6,
     1.8,
