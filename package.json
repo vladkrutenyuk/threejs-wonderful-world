@@ -6,7 +6,7 @@
     "build-server": "tsc -p ./src/server -w",
     "build-client": "tsc -p ./src/client -w",
     "watch-server": "nodemon ./dist/server/server.js",
-    "dev": "concurrently -k \"npm run build-server\" \"npm run build-server\" \"npm run watch-server\"",
+    "dev": "concurrently -k \"npm run build-server\" \"npm run build-client\" \"npm run watch-server\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Vlad Krutenyuk",
