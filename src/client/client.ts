@@ -38,9 +38,13 @@ import {
     BoxGeometry,
 } from '/build/three.module.js'
 
-const getShaderByName = async (name: string): Promise<string> => {
-    const fragmentResponse = await fetch(name);
+// MainScene - scene, renderer, camera, light
+// RingSight
+// MarkersGroup
+// Marker
 
+const getShaderByUrl = async (url: string): Promise<string> => {
+    const fragmentResponse = await fetch(url);
     return fragmentResponse.text();
 }
 
@@ -66,12 +70,12 @@ const initScene = async () => {
     const controls = new OrbitControls(camera, renderer.domElement)
     controls.addEventListener('change', render)
 
-    const vertexShader = await getShaderByName("shaders/vertex.glsl");
-    const fragmentShader = await getShaderByName("shaders/fragment.glsl");
+    const vertexShader = await getShaderByUrl("shaders/vertex.glsl")
+    const fragmentShader = await getShaderByUrl("shaders/fragment.glsl")
 
     const obj = new Mesh(new BoxGeometry(), new ShaderMaterial({
-        vertexShader,
-        fragmentShader,
+        vertexShader: vertexShader,
+        fragmentShader: fragmentShader
     }))
 
     // scene.add(obj);
