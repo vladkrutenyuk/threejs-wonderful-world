@@ -67,6 +67,7 @@ const camera: PerspectiveCamera = new PerspectiveCamera(
 const renderer: WebGLRenderer = new WebGLRenderer({ antialias: true})
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
+document.body.style.cursor = 'none'
 
 const light = new PointLight(0xffffff, 1.5);
 light.position.set(0, 5, 10);
@@ -212,7 +213,7 @@ const divInfo = document.getElementById('info');
 document.addEventListener('mousemove', onMouseMove, false)
 
 
-function onMouseMove(event: MouseEvent) {
+function onMouseMove(event: MouseEvent)  {
     const mousePos = {
         x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
         y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
@@ -221,18 +222,22 @@ function onMouseMove(event: MouseEvent) {
     raycaster.setFromCamera(mousePos, camera)
 
     const planeIntersect = raycaster.intersectObject(planeMesh);
-    const markerIntersects = raycaster.intersectObjects(markersGroup.children)
+    const markerIntersects = raycaster.intersectObjects(markersGroup.children);
 
     if (planeIntersect.length > 0) {
-        ringSight.position.copy(planeIntersect[0].point)
-        lineHorizontal.position.y = ringSight.position.y
-        lineVertical.position.x = ringSight.position.x
-        sightLight.position.y = ringSight.position.y
-        sightLight.position.x = ringSight.position.x
+        ringSight.position.copy(planeIntersect[0].point);
+        lineHorizontal.position.y = ringSight.position.y;
+        lineVertical.position.x = ringSight.position.x;
+        sightLight.position.y = ringSight.position.y;
+        sightLight.position.x = ringSight.position.x;
     }
 
     if (markerIntersects.length > 0) {
-        new TWEEN.Tween(lerpToMarker).to({value: 0.95}, 250).start()
+        new TWEEN.Tween(lerpToMarker).to({value: 0.9}, 250).start().onUpdate(() => {
+            ringSight.position.lerpVectors(planeIntersect[0].point, worldPosMarker, lerpToMarker.value);
+            lineHorizontal.position.y = MathUtils.lerp(ringSight.position.y, worldPosMarker.y, lerpToMarker.value);
+            lineVertical.position.x = MathUtils.lerp(ringSight.position.x, worldPosMarker.x, lerpToMarker.value);
+        })
         markerIntersects[0].object.getWorldPosition(worldPosMarker)
 
         if (!isMouseOverMarker) {
@@ -244,7 +249,11 @@ function onMouseMove(event: MouseEvent) {
     }
     else {
         if (isMouseOverMarker){
-            new TWEEN.Tween(lerpToMarker).to({value: 0}, 300).start()
+            new TWEEN.Tween(lerpToMarker).to({value: 0}, 300).start().onUpdate(() => {
+                ringSight.position.lerpVectors(planeIntersect[0].point, ringSight.position, lerpToMarker.value);
+                lineHorizontal.position.y = MathUtils.lerp(ringSight.position.y, worldPosMarker.y, lerpToMarker.value);
+                lineVertical.position.x = MathUtils.lerp(ringSight.position.x, worldPosMarker.x, lerpToMarker.value);
+            })
             new TWEEN.Tween(ringSight.scale).to(new Vector3().setScalar(1), 150).start()
             regenerateRingSightGeometry(0.035)
             divInfo.innerHTML = "";
@@ -252,9 +261,9 @@ function onMouseMove(event: MouseEvent) {
         }
     }
 
-    ringSight.position.lerpVectors(ringSight.position, worldPosMarker, lerpToMarker.value)
-    lineHorizontal.position.y = MathUtils.lerp(lineHorizontal.position.y, worldPosMarker.y, lerpToMarker.value)
-    lineVertical.position.x = MathUtils.lerp(lineVertical.position.x, worldPosMarker.x, lerpToMarker.value)
+    // ringSight.position.lerpVectors(ringSight.position, worldPosMarker, lerpToMarker.value)
+    // lineHorizontal.position.y = MathUtils.lerp(lineHorizontal.position.y, worldPosMarker.y, lerpToMarker.value)
+    // lineVertical.position.x = MathUtils.lerp(lineVertical.position.x, worldPosMarker.x, lerpToMarker.value)
 }
 
 function regenerateRingSightGeometry(newInnerRadius: number) {
@@ -269,6 +278,12 @@ function regenerateRingSightGeometry(newInnerRadius: number) {
 }
 
 document.addEventListener('dblclick', onDoubleClick, false)
+
+const uniforms = {
+    u_color : { value: new Color(0x000000) },
+    u_fresnelColor : { value: new Color(0xffffff) },
+    u_fresnelPower : { value: 2}
+}
 
 function onDoubleClick(event: MouseEvent) {
     const mousePos = {
@@ -290,11 +305,7 @@ function onDoubleClick(event: MouseEvent) {
     const markerVisual = new Mesh(
         new SphereGeometry(0.02, 20, 20),
         new ShaderMaterial({
-            uniforms: {
-                u_color : { value: new Color(0x000000) },
-                u_fresnelColor : { value: new Color(0xffffff) },
-                u_fresnelPower : { value: 2}
-            },
+            uniforms,
             vertexShader,
             fragmentShader
         })
@@ -332,7 +343,6 @@ function onWindowResize() {
 function animate() {
 
     requestAnimationFrame(animate)
-
     TWEEN.update()
     render()
 }
