@@ -2,7 +2,61 @@ import * as THREE from '/build/three.module.js'
 import { OrbitControls } from '/jsm/controls/OrbitControls'
 import { TWEEN } from '/jsm/libs/tween.module.min'
 
-import { Group, Vector3, Scene, Color, PerspectiveCamera, WebGLRenderer, Mesh, AxesHelper, Material, IcosahedronGeometry, MeshBasicMaterial, Texture, TextureLoader, CubeTextureLoader, DirectionalLight, Vector2, PlaneGeometry, Object3D, RingGeometry, Raycaster, PointLight, OrthographicCamera, CylinderGeometry, ConeBufferGeometry, Vector, GridHelper, Line, LineBasicMaterial, BufferGeometry, SphereGeometry} from '/build/three.module.js'
+import {
+    Group,
+    Vector3,
+    Scene,
+    Color,
+    PerspectiveCamera,
+    WebGLRenderer,
+    Mesh,
+    Material,
+    IcosahedronGeometry,
+    MeshBasicMaterial,
+    Texture,
+    TextureLoader,
+    CubeTextureLoader,
+    DirectionalLight,
+    Vector2,
+    PlaneGeometry,
+    Object3D,
+    RingGeometry,
+    Raycaster,
+    PointLight,
+    OrthographicCamera,
+    CylinderGeometry,
+    ConeBufferGeometry,
+    Vector,
+    GridHelper,
+    Line,
+    LineBasicMaterial,
+    BufferGeometry,
+    SphereGeometry,
+    Camera,
+    ShaderMaterial,
+    BoxGeometry,
+    MathUtils
+} from '/build/three.module.js'
+
+// MainScene - scene, renderer, camera, light
+// RingSight
+// MarkersGroup
+// Marker
+
+const getShaderByUrl = async (url: string): Promise<string> => {
+    const fragmentResponse = await fetch(url);
+    return fragmentResponse.text();
+}
+
+let vertexShader: string
+let fragmentShader: string
+
+const fetchShaders = async () => {
+    vertexShader = await getShaderByUrl("shaders/vert.glsl");
+    fragmentShader = await getShaderByUrl("shaders/frag.glsl");
+}
+
+fetchShaders();
 
 const scene: Scene = new Scene()
 scene.background = new Color(0x101010)
@@ -13,6 +67,7 @@ const camera: PerspectiveCamera = new PerspectiveCamera(
 const renderer: WebGLRenderer = new WebGLRenderer({ antialias: true})
 renderer.setSize(window.innerWidth, window.innerHeight)
 document.body.appendChild(renderer.domElement)
+document.body.style.cursor = 'none'
 
 const light = new PointLight(0xffffff, 1.5);
 light.position.set(0, 5, 10);
@@ -54,7 +109,7 @@ const lineVertGeom = new BufferGeometry().setFromPoints([
     new Vector3(0, -planeGeometry.parameters.height / 2, linesOffsetZ)
 ]);
 
-const lineVertical = new Line(lineVertGeom, new LineBasicMaterial({ color: 0xffffff }));
+const lineVertical = new Line(lineVertGeom, new LineBasicMaterial({ color: 0xf0f0f0 }));
 scene.add(lineVertical);
 
 const lineHorizGeom = new BufferGeometry().setFromPoints([
@@ -62,7 +117,7 @@ const lineHorizGeom = new BufferGeometry().setFromPoints([
     new Vector3(-planeGeometry.parameters.width / 2, 0, linesOffsetZ)
 ]);
 
-const lineHorizontal = new Line(lineHorizGeom, new LineBasicMaterial({ color: 0xffffff }));
+const lineHorizontal = new Line(lineHorizGeom, new LineBasicMaterial({ color: 0xf0f0f0 }));
 scene.add(lineHorizontal);
 
 camera.position.set(0, 0.2, 2)
@@ -132,8 +187,8 @@ function fixOffsetMap() {
 document.addEventListener('keydown', onKeyDown, false);
 
 let ringSightData = {
-    innerRadius: 0.03,
-    outerRadius: 0.05,
+    innerRadius: 0.035,
+    outerRadius: 0.0425,
     thetaSegments: 16
 }
 
@@ -142,8 +197,8 @@ const ringSight = new Mesh(
         ringSightData.innerRadius, ringSightData.outerRadius, ringSightData.thetaSegments
     )
     , new MeshBasicMaterial({
-        color: new Color(0xffffff),
-        transparent: true
+            color: new Color(0xffffff),
+            transparent: true
         }
     )
 )
@@ -158,7 +213,7 @@ const divInfo = document.getElementById('info');
 document.addEventListener('mousemove', onMouseMove, false)
 
 
-function onMouseMove(event: MouseEvent) {
+function onMouseMove(event: MouseEvent)  {
     const mousePos = {
         x: (event.clientX / renderer.domElement.clientWidth) * 2 - 1,
         y: -(event.clientY / renderer.domElement.clientHeight) * 2 + 1
@@ -167,38 +222,48 @@ function onMouseMove(event: MouseEvent) {
     raycaster.setFromCamera(mousePos, camera)
 
     const planeIntersect = raycaster.intersectObject(planeMesh);
-    const markerIntersects = raycaster.intersectObjects(markersGroup.children)
+    const markerIntersects = raycaster.intersectObjects(markersGroup.children);
 
     if (planeIntersect.length > 0) {
-        ringSight.position.copy(planeIntersect[0].point)
-        lineHorizontal.position.y = ringSight.position.y
-        lineVertical.position.x = ringSight.position.x
-        sightLight.position.y = ringSight.position.y
-        sightLight.position.x = ringSight.position.x
+        ringSight.position.copy(planeIntersect[0].point);
+        lineHorizontal.position.y = ringSight.position.y;
+        lineVertical.position.x = ringSight.position.x;
+        sightLight.position.y = ringSight.position.y;
+        sightLight.position.x = ringSight.position.x;
     }
 
     if (markerIntersects.length > 0) {
-        new TWEEN.Tween(lerpToMarker).to({value: 0.95}, 250).start()
+        new TWEEN.Tween(lerpToMarker).to({value: 0.9}, 250).start().onUpdate(() => {
+            ringSight.position.lerpVectors(planeIntersect[0].point, worldPosMarker, lerpToMarker.value);
+            lineHorizontal.position.y = MathUtils.lerp(ringSight.position.y, worldPosMarker.y, lerpToMarker.value);
+            lineVertical.position.x = MathUtils.lerp(ringSight.position.x, worldPosMarker.x, lerpToMarker.value);
+        })
         markerIntersects[0].object.getWorldPosition(worldPosMarker)
 
         if (!isMouseOverMarker) {
             new TWEEN.Tween(ringSight.scale).to(new Vector3().setScalar(1.2), 250).start()
-            regenerateRingSightGeometry(0.045)
+            regenerateRingSightGeometry(0.005)
             isMouseOverMarker = true
             divInfo.innerHTML = "point: " + worldPosMarker.x.toString().slice(0, 5) + " ; " + worldPosMarker.y.toString().slice(0, 5)
         }
     }
     else {
         if (isMouseOverMarker){
-            new TWEEN.Tween(lerpToMarker).to({value: 0}, 300).start()
+            new TWEEN.Tween(lerpToMarker).to({value: 0}, 300).start().onUpdate(() => {
+                ringSight.position.lerpVectors(planeIntersect[0].point, ringSight.position, lerpToMarker.value);
+                lineHorizontal.position.y = MathUtils.lerp(ringSight.position.y, worldPosMarker.y, lerpToMarker.value);
+                lineVertical.position.x = MathUtils.lerp(ringSight.position.x, worldPosMarker.x, lerpToMarker.value);
+            })
             new TWEEN.Tween(ringSight.scale).to(new Vector3().setScalar(1), 150).start()
-            regenerateRingSightGeometry(0.03)
+            regenerateRingSightGeometry(0.035)
             divInfo.innerHTML = "";
             isMouseOverMarker = false
         }
     }
 
-    ringSight.position.lerpVectors(ringSight.position, worldPosMarker, lerpToMarker.value)
+    // ringSight.position.lerpVectors(ringSight.position, worldPosMarker, lerpToMarker.value)
+    // lineHorizontal.position.y = MathUtils.lerp(lineHorizontal.position.y, worldPosMarker.y, lerpToMarker.value)
+    // lineVertical.position.x = MathUtils.lerp(lineVertical.position.x, worldPosMarker.x, lerpToMarker.value)
 }
 
 function regenerateRingSightGeometry(newInnerRadius: number) {
@@ -213,6 +278,12 @@ function regenerateRingSightGeometry(newInnerRadius: number) {
 }
 
 document.addEventListener('dblclick', onDoubleClick, false)
+
+const uniforms = {
+    u_color : { value: new Color(0x000000) },
+    u_fresnelColor : { value: new Color(0xffffff) },
+    u_fresnelPower : { value: 2}
+}
 
 function onDoubleClick(event: MouseEvent) {
     const mousePos = {
@@ -230,11 +301,13 @@ function onDoubleClick(event: MouseEvent) {
             visible: false
         })
     )
+
     const markerVisual = new Mesh(
-        new SphereGeometry(0.02),
-        new MeshBasicMaterial({
-            color: new Color(1 ,1 ,1),
-            transparent: false
+        new SphereGeometry(0.02, 20, 20),
+        new ShaderMaterial({
+            uniforms,
+            vertexShader,
+            fragmentShader
         })
     )
     marker.position.copy(intersect.point)
@@ -268,6 +341,7 @@ function onWindowResize() {
 }
 
 function animate() {
+
     requestAnimationFrame(animate)
     TWEEN.update()
     render()
@@ -277,4 +351,4 @@ function render() {
     renderer.render(scene, camera)
 }
 
-animate()
+animate();
