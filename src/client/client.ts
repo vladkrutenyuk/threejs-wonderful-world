@@ -341,7 +341,6 @@ function onWindowResize() {
 }
 
 function animate() {
-
     requestAnimationFrame(animate)
     TWEEN.update()
     render()
