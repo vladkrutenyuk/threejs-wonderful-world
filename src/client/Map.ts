@@ -3,6 +3,7 @@ import * as THREE from "/build/three.module.js";
 
 export class Map {
     private _mesh: Mesh;
+    public get mesh() { return this._mesh };
     private _geometry: PlaneGeometry;
     private _material: MeshPhongMaterial;
 

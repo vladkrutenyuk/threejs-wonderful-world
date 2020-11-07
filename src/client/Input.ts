@@ -1,15 +1,19 @@
+import {Vector2} from "/build/three.module.js";
+
 export class Input {
-    public mousePosition: {
-        x: number,
-        y: number
+    private _mousePosition: Vector2 = new Vector2();
+    public get mousePosition() { return this._mousePosition };
+
+    constructor() {
+        this.init();
     }
 
-    public Start() {
-        document.addEventListener('mousemove', this.OnMouseMove, false)
+    private init = (): void => {
+        document.addEventListener('mousemove', this.onMouseMove, false);
     }
 
-    private OnMouseMove(event: MouseEvent) {
-        this.mousePosition.x = event.clientX;
-        this.mousePosition.y = event.clientY;
+    private onMouseMove = (event: MouseEvent): void => {
+        this._mousePosition.x = event.clientX;
+        this._mousePosition.y = event.clientY;
     }
 }

@@ -2,7 +2,7 @@ import * as THREE from '/build/three.module.js'
 import { OrbitControls } from '/jsm/controls/OrbitControls'
 import { TWEEN } from '/jsm/libs/tween.module.min'
 import { Map } from "./Map.js";
-import { Crosshair } from "./Crosshair.js";
+import { MapCursor } from "./MapCursor.js";
 
 import {
     Group,
