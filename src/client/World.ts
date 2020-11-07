@@ -41,6 +41,8 @@ export class World{
         this._scene.add(this._light);
 
         this._controls = new OrbitControls(this._camera, this._renderer.domElement);
+        this._controls.maxDistance = 5;
+        this._controls.minDistance = 0.5;
     }
 
     /** Start inited scene rendering by inited camera */
