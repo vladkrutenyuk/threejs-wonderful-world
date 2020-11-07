@@ -1,8 +1,8 @@
 import * as THREE from '/build/three.module.js'
-import {Color, Mesh, MeshBasicMaterial, PointLight, RingGeometry, Scene} from "/build/three.module.js";
+import {Color, Mesh, MeshBasicMaterial, PointLight, RingGeometry, Scene, Vector2} from "/build/three.module.js";
 import {TWEEN} from "/jsm/libs/tween.module.min";
 
-class Crosshair {
+export class Crosshair {
     private ringParameters: {
         innerRadius: 0.035,
         outerRadius: 0.0425,
@@ -16,17 +16,23 @@ class Crosshair {
         distance: 0.5
     }
 
+    private windowWidth: number;
+    private windowHeight: number;
     private scene: Scene;
     private sightLight: PointLight;
     private ring: Mesh;
 
     private isInitialized: boolean = false;
 
-    constructor(scene: Scene, mapWidth: number, mapHeight: number) {
+    constructor(scene: Scene,
+                mapWidth: number,
+                mapHeight: number,
+                windowWidth: number,
+                windowHeight: number) {
         this.scene = scene;
     }
 
-    public Init() {
+    public init = (): void => {
         this.sightLight = new PointLight(
             this.lightSettings.color,
             this.lightSettings.intensity,
@@ -47,14 +53,25 @@ class Crosshair {
         this.scene.add(this.ring);
     }
 
-    public Update() {
+    public sighting = (mousePosition: Vector2): void => {
         if (!this.isInitialized) return;
 
+        const mouseCoords = {
+            x: (mousePosition.x / this.windowWidth) * 2 - 1,
+            y: -(mousePosition.y / this.windowHeight) * 2 + 1
+        };
+        // пересчитываем координаты мышки
+        // выпускаем райкаст по этим координатам
+        // если пересечение с плейном - обновляем позицию прицела
+        // если пересечение с маркером - onMarkerEnter
+    }
+
+    public onMarkerEnter() {
 
     }
 
-    public OnMarkerEnter() {
-
+    public createMarker() {
+        
     }
 
     // const raycaster = new Raycaster()
