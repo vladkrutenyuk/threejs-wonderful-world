@@ -1,29 +1,34 @@
 import * as THREE from '/build/three.module.js'
 import {
+    BufferGeometry,
     Camera,
-    Color, Group, Material,
+    Color, Group, Line, LineBasicMaterial, Material,
     Mesh,
     MeshBasicMaterial,
     PointLight,
     Raycaster,
     RingGeometry,
+    PlaneGeometry,
     Scene,
-    Vector2
+    Vector2, Vector3, MathUtils
 } from "/build/three.module.js";
 import {TWEEN} from "/jsm/libs/tween.module.min";
+import {ParametricGeometries} from "/jsm/geometries/ParametricGeometries";
+import plane = ParametricGeometries.plane;
 
 export class MapCursor {
-    private _cursor: Group;
+    private _cursor: Group = new Group();
     private _ring: Mesh;
-    private _ringGeometry: RingGeometry;
-    private _ringMaterial: Material;
     private _light: PointLight;
+    private _verticalLine: Line;
+    private _horizontalLine: Line;
 
     private _scene: Scene;
     private _camera: Camera;
     private _mapMesh: Mesh;
 
     private _raycaster: Raycaster = new Raycaster();
+    private _mapPosition: Vector3 = new Vector3();
 
     constructor(scene: Scene, camera: Camera, mapMesh: Mesh) {
         this._scene = scene;
@@ -33,21 +38,34 @@ export class MapCursor {
     }
 
     private init = (): void => {
-        this._cursor = new Group();
-
         this._light = new PointLight(0xffffff, 3, 0.5)
         this._light.position.z = 0.15;
-        this._cursor.add(this._light);
 
-        this._ringGeometry = new RingGeometry(0.035,0.0425,16);
-        this._ringMaterial = new MeshBasicMaterial({ color: 0xffffff });
-        this._ring = new Mesh(this._ringGeometry, this._ringMaterial);
+        this._ring = new Mesh(
+            new RingGeometry(0.035,0.0425,16),
+            new MeshBasicMaterial({ color: 0xffffff }));
+
         this._cursor.add(this._ring);
+        this._scene.add(this._cursor, this._light);
 
-        this._scene.add(this._cursor);
+        const planeGeometry = <PlaneGeometry>this._mapMesh.geometry;
+        const lineMaterial = new LineBasicMaterial({ color: 0xf0f0f0 });
+
+        const lineVerticalGeometry = new BufferGeometry().setFromPoints([
+            new Vector3(0,  planeGeometry.parameters.height / 2, 0),
+            new Vector3(0, -planeGeometry.parameters.height / 2, 0)]);
+        this._verticalLine = new Line(lineVerticalGeometry, lineMaterial);
+
+        const lineHorizontalGeometry = new BufferGeometry().setFromPoints([
+            new Vector3(planeGeometry.parameters.width / 2, 0, 0),
+            new Vector3(-planeGeometry.parameters.width / 2, 0, 0)]);
+        this._horizontalLine = new Line(lineHorizontalGeometry, lineMaterial);
+
+        this._scene.add(this._horizontalLine, this._verticalLine);
     }
 
     public positioning = (mousePosition: Vector2): void => {
+        this.setCursorPositionMagically();
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -57,12 +75,25 @@ export class MapCursor {
 
         const mapIntersection = this._raycaster.intersectObject(this._mapMesh)[0];
 
-        if (mapIntersection == null) return;
+        if (mapIntersection == null) {
+            return;
+        } else {
+            this._mapPosition.copy(mapIntersection.point);
+        }
 
-        this._cursor.position.copy(mapIntersection.point);
-        // выпускаем райкаст по этим координатам
-        // если пересечение с плейном - обновляем позицию прицела
         // если пересечение с маркером - onMarkerEnter
+    }
+
+    private setCursorPositionMagically = (): void => {
+        const position = new Vector3().lerpVectors(this._mapPosition, new Vector3(0 ,0 ,0), 0);
+        const alpha = 0.15;
+
+        this._cursor.position.lerpVectors(this._cursor.position, position, alpha);
+        this._horizontalLine.position.y = MathUtils.lerp(this._horizontalLine.position.y, position.y, alpha);
+        this._verticalLine.position.x = MathUtils.lerp(this._verticalLine.position.x, position.x, alpha);
+
+        this._light.position.x = this._mapPosition.x;
+        this._light.position.y = this._mapPosition.y;
     }
 
     // public onMarkerEnter() {
