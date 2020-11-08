@@ -49,7 +49,7 @@ export class MapCursor {
         this._scene.add(this._cursor, this._light);
 
         const planeGeometry = <PlaneGeometry>this._mapMesh.geometry;
-        const lineMaterial = new LineBasicMaterial({ color: 0xf0f0f0 });
+        const lineMaterial = new LineBasicMaterial({ color: 0xa0a0a0 });
 
         const lineVerticalGeometry = new BufferGeometry().setFromPoints([
             new Vector3(0,  planeGeometry.parameters.height / 2, 0),

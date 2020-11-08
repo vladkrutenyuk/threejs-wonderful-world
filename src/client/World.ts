@@ -33,7 +33,7 @@ export class World{
         this._renderer = new WebGLRenderer({ antialias: true});
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this._renderer.domElement)
-        // document.body.style.cursor = 'none';
+        // document.body.style.cursor = 'crosshair';
         window.addEventListener('resize', this.onWindowResize, false)
 
         this._light = new PointLight(0xffffff, 1.5);

@@ -17,14 +17,15 @@ export class Map {
     private init = (): void => {
         this._geometry = new PlaneGeometry(3.6, 1.8, 140, 70);
         this._material = new MeshPhongMaterial({
-            map: new TextureLoader().load("img/world_color.jpg"),
+            map: new TextureLoader().load("img/world_height.jpg"),
             specularMap: new TextureLoader().load("img/world_specular.jpg"),
             displacementMap: new TextureLoader().load("img/world_height.jpg"),
             displacementBias: -0.25,
-            displacementScale: 0.75,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.6})
+            displacementScale: 0.35,
+            wireframe: false,
+            transparent: false,
+            opacity: 0.6,
+            color: 0x202020})
         this._material.map.center.set(0.5, 0.5);
 
         this._mesh = new Mesh(this._geometry, this._material);
