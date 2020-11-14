@@ -1,10 +1,7 @@
 import {
-    Mesh,
-    PlaneGeometry,
-    TextureLoader,
-    Scene,
-    MeshPhongMaterial,
-    Group, MathUtils, BufferGeometry, Float32BufferAttribute, PointsMaterial, Points
+    Mesh, PlaneGeometry, TextureLoader,
+    Scene, MeshPhongMaterial, Group,
+    MathUtils, BufferGeometry, Float32BufferAttribute, PointsMaterial, Points
 } from "/build/three.module.js";
 import { Marker, MarkerData } from "./Marker.js";
 
@@ -19,6 +16,7 @@ export class Map {
     private _scene: Scene;
 
     private _markersGroup: Group = new Group();
+    public get markersGroup() { return this._markersGroup };
 
     constructor(scene: Scene) {
         this._scene = scene;
@@ -51,7 +49,7 @@ export class Map {
             specularMap: new TextureLoader().load("img/world_specular.jpg"),
             displacementMap: new TextureLoader().load("img/world_height.jpg"),
             displacementBias: -0.25,
-            displacementScale: 0.55,
+            displacementScale: 0.45,
             wireframe: true,
             transparent: false,
             opacity: 0.6

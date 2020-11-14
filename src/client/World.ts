@@ -46,8 +46,7 @@ export class World{
     }
 
     /** Start inited scene rendering by inited camera */
-    public startRendering = (): void => {
-        requestAnimationFrame(this.startRendering);
+    public render = (): void => {
         this._renderer.render(this._scene, this._camera);
     }
 

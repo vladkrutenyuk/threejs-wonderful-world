@@ -12,7 +12,7 @@ export class Input {
         document.addEventListener('mousemove', this.onMouseMove, false);
     }
 
-    private onMouseMove = (event: MouseEvent): void => {
+    public onMouseMove = (event: MouseEvent): void => {
         this._mousePosition.x = event.clientX;
         this._mousePosition.y = event.clientY;
     }

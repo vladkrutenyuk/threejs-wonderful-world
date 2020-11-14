@@ -2,9 +2,10 @@ import {
     Scene, Camera, Group, PointLight,
     Mesh, MeshBasicMaterial, Line, LineBasicMaterial,
     RingGeometry, PlaneGeometry, BufferGeometry,
-    Raycaster, Vector2, Vector3, MathUtils
+    Raycaster, Vector2, Vector3, MathUtils, Object3D
 } from "/build/three.module.js";
 import {TWEEN} from "/jsm/libs/tween.module.min";
+import {Marker} from "./Marker";
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -16,14 +17,18 @@ export class MapCursor {
     private _scene: Scene;
     private _camera: Camera;
     private _mapMesh: Mesh;
+    private _markersGroup: Group;
+
+    private _currentMarker: Object3D = null;
 
     private _raycaster: Raycaster = new Raycaster();
     private _mapPosition: Vector3 = new Vector3();
 
-    constructor(scene: Scene, camera: Camera, mapMesh: Mesh) {
+    constructor(scene: Scene, camera: Camera, mapMesh: Mesh, mapMarkersGroup: Group) {
         this._scene = scene;
         this._camera = camera;
         this._mapMesh = mapMesh;
+        this._markersGroup = mapMarkersGroup;
         this.init();
     } 
 
@@ -65,13 +70,25 @@ export class MapCursor {
 
         const mapIntersection = this._raycaster.intersectObject(this._mapMesh)[0];
 
-        if (mapIntersection == null) {
-            return;
-        } else {
-            this._mapPosition.copy(mapIntersection.point);
-        }
+        mapIntersection != null &&
+        this._mapPosition.copy(mapIntersection.point);
 
-        // если пересечение с маркером - onMarkerEnter
+        const markerIntersection = this._raycaster.intersectObjects(this._markersGroup.children)[0];
+
+        if (markerIntersection == null){
+            if (this._currentMarker != null) {
+                this.onMarkerExit(this._currentMarker);
+            }
+        } else {
+            if (this._currentMarker == null) {
+                this.onMarkerEnter(markerIntersection.object);
+            } else {
+                if (this._currentMarker != markerIntersection.object) {
+                    this.onMarkerExit(this._currentMarker);
+                    this.onMarkerEnter(markerIntersection.object);
+                }
+            }
+        }
     }
 
     private setCursorPositionMagically = (): void => {
@@ -79,6 +96,7 @@ export class MapCursor {
         const alpha = 0.15;
 
         this._cursor.position.lerpVectors(this._cursor.position, position, alpha);
+
         this._horizontalLine.position.y = MathUtils.lerp(this._horizontalLine.position.y, position.y, alpha);
         this._verticalLine.position.x = MathUtils.lerp(this._verticalLine.position.x, position.x, alpha);
 
@@ -86,13 +104,15 @@ export class MapCursor {
         this._light.position.y = this._mapPosition.y;
     }
 
-    // public onMarkerEnter() {
-    //
-    // }
-    //
-    // public createMarker() {
-    //
-    // }
+    private onMarkerEnter(markerObject: Object3D) {
+        this._currentMarker = markerObject;
+        console.log("ENTER " + markerObject.userData.marker.data.title);
+    }
+
+    private onMarkerExit(markerObject: Object3D) {
+        this._currentMarker = null;
+        console.log("EXIT " + markerObject.userData.marker.data.title);
+    }
 
     // const raycaster = new Raycaster()
     // let isMouseOverMarker : boolean = false

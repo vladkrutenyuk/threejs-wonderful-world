@@ -10,9 +10,6 @@ export type MarkerData = {
 }
 
 export class Marker {
-    private readonly _title: string;
-    public get title() { return this._title };
-
     private readonly _data: MarkerData;
     public get data() { return this._data };
 
@@ -33,6 +30,6 @@ export class Marker {
         this._mesh.position.copy(new Vector3(
             mapWidth * (this._data.mapNormalizedPositionX - 0.5),
             mapHeight * (this._data.mapNormalizedPositionY - 0.5),
-            0.07),);
+            0.05),);
     }
 }
