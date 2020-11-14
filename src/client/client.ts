@@ -8,10 +8,13 @@ const map = new Map(world.scene);
 const mapCursor = new MapCursor(world.scene, world.camera, map.mesh);
 const input = new Input();
 
-const update = () => {
+map.initMarkers("data/markers.json");
+
+const update = (): void => {
     requestAnimationFrame(update);
     mapCursor.positioning(input.mousePosition);
 }
 
 world.startRendering();
 update();
+

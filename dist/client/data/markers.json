@@ -1,0 +1,37 @@
+[
+    {
+      "title": "Colosseum",
+      "mapNormalizedPositionX": 0.3,
+      "mapNormalizedPositionY": 0.5
+    },
+    {
+      "title": "Great Wall of China",
+      "mapNormalizedPositionX": 0.1,
+      "mapNormalizedPositionY": 0.2
+    },
+    {
+      "title": "Machu Picchu",
+      "mapNormalizedPositionX": 0.2,
+      "mapNormalizedPositionY": 0.3
+    },
+    {
+      "title": "Petra",
+      "mapNormalizedPositionX": 0.5,
+      "mapNormalizedPositionY": 0.6
+    },
+    {
+      "title": "Taj Mahal",
+      "mapNormalizedPositionX": 0.5,
+      "mapNormalizedPositionY": 0.5
+    },
+    {
+      "title": "Christ the Redeemer",
+      "mapNormalizedPositionX": 0.3,
+      "mapNormalizedPositionY": 0.9
+    },
+    {
+      "title": "Chichen Itza",
+      "mapNormalizedPositionX": 0.6,
+      "mapNormalizedPositionY": 0.2
+    }
+]

@@ -1,20 +1,10 @@
-import * as THREE from '/build/three.module.js'
 import {
-    BufferGeometry,
-    Camera,
-    Color, Group, Line, LineBasicMaterial, Material,
-    Mesh,
-    MeshBasicMaterial,
-    PointLight,
-    Raycaster,
-    RingGeometry,
-    PlaneGeometry,
-    Scene,
-    Vector2, Vector3, MathUtils
+    Scene, Camera, Group, PointLight,
+    Mesh, MeshBasicMaterial, Line, LineBasicMaterial,
+    RingGeometry, PlaneGeometry, BufferGeometry,
+    Raycaster, Vector2, Vector3, MathUtils
 } from "/build/three.module.js";
 import {TWEEN} from "/jsm/libs/tween.module.min";
-import {ParametricGeometries} from "/jsm/geometries/ParametricGeometries";
-import plane = ParametricGeometries.plane;
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -35,7 +25,7 @@ export class MapCursor {
         this._camera = camera;
         this._mapMesh = mapMesh;
         this.init();
-    }
+    } 
 
     private init = (): void => {
         this._light = new PointLight(0xffffff, 3, 0.5)
@@ -49,7 +39,7 @@ export class MapCursor {
         this._scene.add(this._cursor, this._light);
 
         const planeGeometry = <PlaneGeometry>this._mapMesh.geometry;
-        const lineMaterial = new LineBasicMaterial({ color: 0xa0a0a0 });
+        const lineMaterial = new LineBasicMaterial({ color: 0xd0d0d0 });
 
         const lineVerticalGeometry = new BufferGeometry().setFromPoints([
             new Vector3(0,  planeGeometry.parameters.height / 2, 0),
