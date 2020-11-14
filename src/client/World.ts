@@ -33,7 +33,6 @@ export class World{
         this._renderer = new WebGLRenderer({ antialias: true});
         this._renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(this._renderer.domElement)
-        // document.body.style.cursor = 'crosshair';
         window.addEventListener('resize', this.onWindowResize, false)
 
         this._light = new PointLight(0xffffff, 1.5);
@@ -41,8 +40,15 @@ export class World{
         this._scene.add(this._light);
 
         this._controls = new OrbitControls(this._camera, this._renderer.domElement);
-        this._controls.maxDistance = 5;
-        this._controls.minDistance = 0.5;
+        this._controls.maxDistance = 3;
+        this._controls.minDistance = 1;
+        this._controls.minAzimuthAngle = -Math.PI / 4;
+        this._controls.maxAzimuthAngle = Math.PI / 4;
+
+        this._controls.minPolarAngle = -Math.PI / 3 + Math.PI / 2;
+        this._controls.maxPolarAngle = Math.PI / 3 + Math.PI / 2;
+
+        this._controls.screenSpacePanning = false;
     }
 
     /** Start inited scene rendering by inited camera */

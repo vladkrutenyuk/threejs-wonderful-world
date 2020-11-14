@@ -23,6 +23,7 @@ export class MapCursor {
 
     private _raycaster: Raycaster = new Raycaster();
     private _mapPosition: Vector3 = new Vector3();
+    private _magnetizationToMarker: number = 0;
 
     constructor(scene: Scene, camera: Camera, mapMesh: Mesh, mapMarkersGroup: Group) {
         this._scene = scene;
@@ -92,7 +93,10 @@ export class MapCursor {
     }
 
     private setCursorPositionMagically = (): void => {
-        const position = new Vector3().lerpVectors(this._mapPosition, new Vector3(0 ,0 ,0), 0);
+        const position = new Vector3().lerpVectors(
+            this._mapPosition,
+            this._currentMarker != null ? this._currentMarker.position : new Vector3(),
+            this._magnetizationToMarker);
         const alpha = 0.15;
 
         this._cursor.position.lerpVectors(this._cursor.position, position, alpha);
@@ -107,11 +111,17 @@ export class MapCursor {
     private onMarkerEnter(markerObject: Object3D) {
         this._currentMarker = markerObject;
         console.log("ENTER " + markerObject.userData.marker.data.title);
+        document.body.style.cursor = 'pointer';
+
+        this._magnetizationToMarker = 1;
     }
 
     private onMarkerExit(markerObject: Object3D) {
         this._currentMarker = null;
         console.log("EXIT " + markerObject.userData.marker.data.title);
+        document.body.style.cursor = 'default';
+
+        this._magnetizationToMarker = 0;
     }
 
     // const raycaster = new Raycaster()

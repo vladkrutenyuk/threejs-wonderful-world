@@ -51,8 +51,8 @@ export class Map {
             displacementBias: -0.25,
             displacementScale: 0.45,
             wireframe: true,
-            transparent: false,
-            opacity: 0.6
+            transparent: true,
+            opacity: 0.7
         })
         this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);
