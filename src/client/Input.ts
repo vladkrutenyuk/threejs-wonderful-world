@@ -4,6 +4,8 @@ export class Input {
     private _mousePosition: Vector2 = new Vector2();
     public get mousePosition() { return this._mousePosition };
 
+    private _onMouseMoveEventFunc: (mousePosition: Vector2) => void;
+
     constructor() {
         this.init();
     }
@@ -12,8 +14,14 @@ export class Input {
         document.addEventListener('mousemove', this.onMouseMove, false);
     }
 
-    public onMouseMove = (event: MouseEvent): void => {
+    private onMouseMove = (event: MouseEvent): void => {
         this._mousePosition.x = event.clientX;
         this._mousePosition.y = event.clientY;
+
+        this._onMouseMoveEventFunc(this.mousePosition);
+    }
+
+    public setMouseMoveEventListener = (func: (mousePosition: Vector2) => void) => {
+        this._onMouseMoveEventFunc = func;
     }
 }

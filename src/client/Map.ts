@@ -23,7 +23,7 @@ export class Map {
         this.init();
     }
 
-    public initMarkers = async (jsonDataUrl: string) => {
+    public initMarkers = async (jsonDataUrl: string): Promise<void> => {
         const jsonDataResponse = await fetch(jsonDataUrl);
         const jsonDataText = await jsonDataResponse.text();
 
@@ -52,7 +52,7 @@ export class Map {
             displacementScale: 0.45,
             wireframe: true,
             transparent: true,
-            opacity: 0.7
+            opacity: 0.6
         })
         this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);

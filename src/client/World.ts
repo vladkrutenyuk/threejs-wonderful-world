@@ -4,18 +4,12 @@ import {OrbitControls} from "/jsm/controls/OrbitControls";
 export class World{
     private _scene: Scene;
     public get scene(): Scene { return this._scene };
-
     private _camera: PerspectiveCamera;
     public get camera(): PerspectiveCamera { return this._camera };
 
     private _renderer: WebGLRenderer;
-    public get renderer(): WebGLRenderer { return this._renderer };
-
     private _light: Light;
-    public get light(): Light { return this._light };
-
     private _controls: OrbitControls;
-    public get controls(): OrbitControls { return this._controls };
 
     constructor() {
         this.init();
@@ -48,7 +42,7 @@ export class World{
         this._controls.minPolarAngle = -Math.PI / 3 + Math.PI / 2;
         this._controls.maxPolarAngle = Math.PI / 3 + Math.PI / 2;
 
-        this._controls.screenSpacePanning = false;
+        this._controls.enablePan = false;
     }
 
     /** Start inited scene rendering by inited camera */

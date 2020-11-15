@@ -5,7 +5,6 @@ import {
     Raycaster, Vector2, Vector3, MathUtils, Object3D
 } from "/build/three.module.js";
 import {TWEEN} from "/jsm/libs/tween.module.min";
-import {Marker} from "./Marker";
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -15,15 +14,19 @@ export class MapCursor {
     private _horizontalLine: Line;
 
     private _scene: Scene;
-    private _camera: Camera;
-    private _mapMesh: Mesh;
+    private readonly _camera: Camera;
+    private readonly _mapMesh: Mesh;
     private _markersGroup: Group;
 
     private _currentMarker: Object3D = null;
+    private _lastMarkerPosition: Vector3 = new Vector3();
 
     private _raycaster: Raycaster = new Raycaster();
     private _mapPosition: Vector3 = new Vector3();
-    private _magnetizationToMarker: number = 0;
+    private _magnetizationToMarker = {
+        value: 0,
+        duration: 500
+    };
 
     constructor(scene: Scene, camera: Camera, mapMesh: Mesh, mapMarkersGroup: Group) {
         this._scene = scene;
@@ -60,8 +63,12 @@ export class MapCursor {
         this._scene.add(this._horizontalLine, this._verticalLine);
     }
 
-    public positioning = (mousePosition: Vector2): void => {
+    public update = (mousePosition: Vector2): void => {
+        TWEEN.update();
         this.setCursorPositionMagically();
+    }
+
+    public positioning = (mousePosition: Vector2) => {
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -95,8 +102,8 @@ export class MapCursor {
     private setCursorPositionMagically = (): void => {
         const position = new Vector3().lerpVectors(
             this._mapPosition,
-            this._currentMarker != null ? this._currentMarker.position : new Vector3(),
-            this._magnetizationToMarker);
+            this._currentMarker != null ? this._currentMarker.position : this._lastMarkerPosition,
+            this._magnetizationToMarker.value);
         const alpha = 0.15;
 
         this._cursor.position.lerpVectors(this._cursor.position, position, alpha);
@@ -108,20 +115,23 @@ export class MapCursor {
         this._light.position.y = this._mapPosition.y;
     }
 
-    private onMarkerEnter(markerObject: Object3D) {
+    private onMarkerEnter = (markerObject: Object3D): void => {
         this._currentMarker = markerObject;
-        console.log("ENTER " + markerObject.userData.marker.data.title);
         document.body.style.cursor = 'pointer';
 
-        this._magnetizationToMarker = 1;
+        new TWEEN.Tween(this._magnetizationToMarker)
+            .to({ value: 1}, this._magnetizationToMarker.duration)
+            .start();
     }
 
-    private onMarkerExit(markerObject: Object3D) {
+    private onMarkerExit = (markerObject: Object3D): void => {
+        this._lastMarkerPosition.copy(this._currentMarker.position);
         this._currentMarker = null;
-        console.log("EXIT " + markerObject.userData.marker.data.title);
         document.body.style.cursor = 'default';
 
-        this._magnetizationToMarker = 0;
+        new TWEEN.Tween(this._magnetizationToMarker)
+            .to({ value: 0}, this._magnetizationToMarker.duration)
+            .start();
     }
 
     // const raycaster = new Raycaster()
