@@ -15,7 +15,6 @@ export class World{
         this.init();
     }
 
-    /** Init scene, perspective camera, orbit controls, renderer, light. And set determined properties  */
     private init = (): void => {
         this._scene = new Scene();
         this._scene.background = new Color(0x101010);

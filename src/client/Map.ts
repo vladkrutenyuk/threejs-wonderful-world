@@ -30,12 +30,11 @@ export class Map {
         const markersData: MarkerData[] = JSON.parse(jsonDataText);
 
         try {
-            await markersData.forEach((m) => {
-                console.log("Marker <<" + m.title + ">> was inited");
-                let marker = new Marker(m);
-                marker.setMapPosition(this.width, this.height);
-                this._scene.add(marker.mesh);
-                this._markersGroup.add(marker.mesh);
+            await markersData.forEach((markerData) => {
+                console.log("Marker <<" + markerData.title + ">> was inited");
+                let marker = new Marker(markerData);
+                marker.initOnMap(this.width, this.height, this._scene);
+                this._markersGroup.add(marker.colliderMesh);
             })
         } catch (e) {
             console.log(e);
