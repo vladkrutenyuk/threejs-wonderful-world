@@ -5,6 +5,7 @@ import {
     Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
 } from "/build/three.module.js";
 import { TWEEN } from "/jsm/libs/tween.module.min";
+import { Marker, MarkerData } from "./Marker.js";
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -134,7 +135,11 @@ export class MapCursor {
         this._currentMarker = markerObject;
         document.body.style.cursor = 'pointer';
 
+        const marker = <Marker>markerObject.userData.marker;
+        marker.setMouseEnterStyle();
+
         TWEEN.removeAll();
+
         new TWEEN.Tween(this._magnetizationToMarker)
             .to({ value: 0.9 }, this._magnetizationToMarker.duration)
             .start();
@@ -157,7 +162,11 @@ export class MapCursor {
         this._currentMarker = null;
         document.body.style.cursor = 'default';
 
+        const marker = <Marker>markerObject.userData.marker;
+        marker.setMouseExitStyle();
+
         TWEEN.removeAll();
+
         new TWEEN.Tween(this._magnetizationToMarker)
             .to({ value: 0 }, this._magnetizationToMarker.duration)
             .start();

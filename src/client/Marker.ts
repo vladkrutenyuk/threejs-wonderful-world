@@ -3,6 +3,7 @@ import {
     Mesh, MeshBasicMaterial, OctahedronGeometry, Scene,
     Vector3
 } from "/build/three.module.js";
+import { TWEEN } from "/jsm/libs/tween.module.min";
 
 export type MarkerData = {
     "title": string,
@@ -50,5 +51,23 @@ export class Marker {
 
         scene.add(this._coloredMesh);
         this._coloredMesh.parent = this._colliderMesh;
+    }
+
+    public setMouseEnterStyle = (): void => {
+        new TWEEN.Tween(this._wireframeMesh.scale)
+            .to(new Vector3().setScalar(1.2), 300)
+            .start();
+        new TWEEN.Tween(this._coloredMesh.scale)
+            .to(new Vector3().setScalar(1.2), 300)
+            .start();
+    }
+
+    public setMouseExitStyle = (): void => {
+        new TWEEN.Tween(this._wireframeMesh.scale)
+            .to(new Vector3().setScalar(1), 300)
+            .start();
+        new TWEEN.Tween(this._coloredMesh.scale)
+            .to(new Vector3().setScalar(1), 300)
+            .start();
     }
 }

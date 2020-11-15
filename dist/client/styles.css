@@ -3,51 +3,24 @@ body {
     margin: 0px;
 }
 
-#help {
-    position: fixed;
-
-    right: 50px;
-    bottom: 50px;
-
-    font-size: 10px;
-    color:#f2f2f2;
-    font-family: monospace;
-    background-color: #101010;
-
-    text-align: right;
-}
-
-#title {
-    position: fixed;
-
-    text-align: left;
-
-    font-size: 15px;
-    color:#f2f2f2;
-    font-family: monospace;
-    background-color: #101010;
-    margin: 10px;
-}
-
-#info {
-    position: fixed;
-
-    right: 400px;
-    top: 10px;
-
-    text-align: center;
-
-    font-size: 15px;
-    color:#f2f2f2;
-    font-family: monospace;
-    background-color: #303030;
-    margin: 25px;
-
-    text-anchor: middle;
-}
-
-.help-container {
+.headerSpace {
+    margin-top: 10px;
+    alignment: center;
     color: #f2f2f2;
     font-family: monospace;
     font-size: 15px;
+    position: absolute;
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+    text-align: center;
+    user-select: none;
+    pointer-events: none;
+    z-index: 1;
+    text-shadow: 1px 3px 0.4em black;
+}
+
+.signText {
+    font-size: 12px;
+    font-weight: normal;
 }
