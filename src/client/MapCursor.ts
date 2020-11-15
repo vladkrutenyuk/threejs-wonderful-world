@@ -2,13 +2,24 @@ import {
     Scene, Camera, Group, PointLight,
     Mesh, MeshBasicMaterial, Line, LineBasicMaterial,
     RingGeometry, PlaneGeometry, BufferGeometry,
-    Raycaster, Vector2, Vector3, MathUtils, Object3D
+    Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
 } from "/build/three.module.js";
-import {TWEEN} from "/jsm/libs/tween.module.min";
+import { TWEEN } from "/jsm/libs/tween.module.min";
 
 export class MapCursor {
     private _cursor: Group = new Group();
     private _ring: Mesh;
+    private _ringMaterial: MeshBasicMaterial;
+    private _ringSrcData = {
+        innerRadius: 0.035,
+        outerRadius: 0.0425,
+        thetaSegments: 16
+    };
+    private _ringData = {
+        innerRadius: this._ringSrcData.innerRadius,
+        outerRadius: this._ringSrcData.outerRadius,
+        thetaSegments: this._ringSrcData.thetaSegments
+    };
     private _light: PointLight;
     private _verticalLine: Line;
     private _horizontalLine: Line;
@@ -40,9 +51,14 @@ export class MapCursor {
         this._light = new PointLight(0xffffff, 3, 0.5)
         this._light.position.z = 0.15;
 
+        this._ringMaterial = new MeshBasicMaterial({ color: 0xffffff });
         this._ring = new Mesh(
-            new RingGeometry(0.035,0.0425,16),
-            new MeshBasicMaterial({ color: 0xffffff }));
+            new RingGeometry(
+                this._ringSrcData.innerRadius,
+                this._ringSrcData.outerRadius,
+                this._ringSrcData.thetaSegments),
+            this._ringMaterial
+            );
 
         this._cursor.add(this._ring);
         this._scene.add(this._cursor, this._light);
@@ -84,9 +100,8 @@ export class MapCursor {
         const markerIntersection = this._raycaster.intersectObjects(this._markersGroup.children)[0];
 
         if (markerIntersection == null){
-            if (this._currentMarker != null) {
-                this.onMarkerExit(this._currentMarker);
-            }
+            this._currentMarker != null &&
+            this.onMarkerExit(this._currentMarker);
         } else {
             if (this._currentMarker == null) {
                 this.onMarkerEnter(markerIntersection.object);
@@ -119,9 +134,22 @@ export class MapCursor {
         this._currentMarker = markerObject;
         document.body.style.cursor = 'pointer';
 
+        TWEEN.removeAll();
         new TWEEN.Tween(this._magnetizationToMarker)
-            .to({ value: 0.95}, this._magnetizationToMarker.duration)
+            .to({ value: 0.9 }, this._magnetizationToMarker.duration)
             .start();
+
+        let tempColor = { hex: this._ringMaterial.color.getHex() };
+        new TWEEN.Tween(tempColor)
+            .to({ hex: new Color(0x000000).getHex() }, this._magnetizationToMarker.duration / 2)
+            .start()
+            .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
+
+        this.tweenRingGeometry(
+            0.001,
+            0.065,
+            4,
+            this._magnetizationToMarker.duration / 2);
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
@@ -129,19 +157,38 @@ export class MapCursor {
         this._currentMarker = null;
         document.body.style.cursor = 'default';
 
+        TWEEN.removeAll();
         new TWEEN.Tween(this._magnetizationToMarker)
-            .to({ value: 0}, this._magnetizationToMarker.duration)
+            .to({ value: 0 }, this._magnetizationToMarker.duration)
             .start();
+
+        let tempColor = { hex: this._ringMaterial.color.getHex() };
+        new TWEEN.Tween(tempColor)
+            .to({ hex: new Color(0xffffff).getHex() }, this._magnetizationToMarker.duration / 2)
+            .start()
+            .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
+
+        this.tweenRingGeometry(
+            0.035,
+            0.0425,
+            16,
+            this._magnetizationToMarker.duration);
     }
 
-    // function regenerateRingSightGeometry(newInnerRadius: number) {
-    //     new TWEEN.Tween(ringSightData)
-    //         .to({innerRadius: newInnerRadius}, 350)
-    //         .start()
-    //         .onUpdate(() => {
-    //             ringSight.geometry.dispose();
-    //             ringSight.geometry = new THREE.RingGeometry(
-    //                 ringSightData.innerRadius, ringSightData.outerRadius, ringSightData.thetaSegments)
-    //         })
-    // }
+    private tweenRingGeometry = (innerRadius: number,
+                                 outerRadius: number,
+                                 thetaSegments: number,
+                                 duration: number): void => {
+        new TWEEN.Tween(this._ringData)
+            .to({ innerRadius, outerRadius, thetaSegments }, duration)
+            .start()
+            .onUpdate(() => {
+                this._ring.geometry.dispose();
+                this._ring.geometry = new RingGeometry(
+                    this._ringData.innerRadius,
+                    this._ringData.outerRadius,
+                    Math.round(this._ringData.thetaSegments)
+                )
+            })
+    }
 }
