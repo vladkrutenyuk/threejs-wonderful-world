@@ -5,9 +5,8 @@
 ![alt-текст](https://github.com/vladkrutenyuk/wonderful-world-threejs/blob/picture-preview/preview.png "Meow :)")
 ---
 ### Run
-1. Being in project folder `cd client`
-2. then `yarn install`
-4. then `yarn watch`
+1. `yarn install`
+2. then `yarn watch`
 3. then enjoy at 'http://localhost:1234'
 ---
 ### Features
