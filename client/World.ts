@@ -1,5 +1,5 @@
-import {Camera, Color, Light, PerspectiveCamera, PointLight, Scene, WebGLRenderer} from "/build/three.module.js";
-import {OrbitControls} from "/jsm/controls/OrbitControls";
+import {Camera, Color, Light, PerspectiveCamera, PointLight, Scene, WebGLRenderer} from "three";
+import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 export class World{
     private _scene: Scene;

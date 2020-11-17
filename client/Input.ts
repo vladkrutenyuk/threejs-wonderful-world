@@ -1,4 +1,4 @@
-import {Vector2} from "/build/three.module.js";
+import {Vector2} from "three";
 
 export class Input {
     private _mousePosition: Vector2 = new Vector2();

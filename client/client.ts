@@ -1,7 +1,7 @@
-import { Map } from "./Map.js";
-import { World } from "./World.js";
-import { MapCursor } from "./MapCursor.js";
-import { Input } from "./Input.js";
+import { Map } from "./Map";
+import { World } from "./World";
+import { MapCursor } from "./MapCursor";
+import { Input } from "./Input";
 
 const jsonDataUrl: string = "data/markers.json";
 

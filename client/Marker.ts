@@ -2,8 +2,7 @@ import {
     BackSide, Group,
     Mesh, MeshBasicMaterial, OctahedronGeometry, Scene,
     Vector3
-} from "/build/three.module.js";
-import { TWEEN } from "/jsm/libs/tween.module.min";
+} from "three";
 
 export type MarkerData = {
     "title": string,

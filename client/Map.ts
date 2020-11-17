@@ -10,11 +10,8 @@ import {
     Float32BufferAttribute,
     PointsMaterial,
     Points,
-    FontLoader,
-    TextGeometry,
-    MeshBasicMaterial
-} from "/build/three.module.js";
-import { Marker, MarkerData } from "./Marker.js";
+} from "three";
+import { Marker, MarkerData } from "./Marker";
 
 export class Map {
     private _mesh: Mesh;

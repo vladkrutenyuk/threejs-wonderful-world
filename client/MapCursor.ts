@@ -3,10 +3,11 @@ import {
     Mesh, MeshBasicMaterial, Line, LineBasicMaterial,
     RingGeometry, PlaneGeometry, BufferGeometry,
     Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
-} from "/build/three.module.js";
-import { TWEEN } from "/jsm/libs/tween.module.min";
-import { Map } from "./Map.js";
-import {Marker, MarkerData} from "./Marker.js";
+} from "three";
+import TWEEN from "@tweenjs/tween.js";
+
+import { Map } from "./Map";
+import {Marker, MarkerData} from "./Marker";
 
 export class MapCursor {
     private _cursor: Group = new Group();
