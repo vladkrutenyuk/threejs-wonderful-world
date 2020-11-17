@@ -4,7 +4,7 @@ import {
     RingGeometry, PlaneGeometry, BufferGeometry,
     Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
 } from "three";
-import TWEEN from "@tweenjs/tween.js";
+import TWEEN, {Tween} from "@tweenjs/tween.js";
 
 import { Map } from "./Map";
 import {Marker, MarkerData} from "./Marker";
@@ -36,6 +36,8 @@ export class MapCursor {
     private _overedMarker: Object3D = null;
     private _lastOveredMarkerPosition: Vector3 = new Vector3();
     private _selectedMarker: Object3D
+
+    private _enterExitTweenGroup = new TWEEN.Group();
 
     private _raycaster: Raycaster = new Raycaster();
     private _mapPosition: Vector3 = new Vector3();
@@ -87,6 +89,7 @@ export class MapCursor {
 
     public update = (): void => {
         TWEEN.update();
+        this._enterExitTweenGroup.update();
         this.setCursorPositionMagically();
     }
 
@@ -121,7 +124,7 @@ export class MapCursor {
         }
     }
 
-    public selectMarker = (): void => {
+    public selectOveredMarker = (): void => {
         if (this._overedMarker == null || this._selectedMarker != null) return;
         document.body.style.cursor = 'default';
         this._selectedMarker = this._overedMarker;
@@ -156,16 +159,17 @@ export class MapCursor {
         document.body.style.cursor = 'pointer';
 
         const marker = <Marker>markerObject.userData.marker;
-        marker.setMouseEnterStyle();
+        marker.setMouseOveringStyle(true);
 
-        TWEEN.removeAll();
+        this._enterExitTweenGroup.removeAll();
+        this._enterExitTweenGroup = new TWEEN.Group();
 
-        new TWEEN.Tween(this._magnetizationToMarker)
+        new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
             .to({ value: 0.9 }, this._magnetizationToMarker.duration)
             .start();
 
         let tempColor = { hex: this._ringMaterial.color.getHex() };
-        new TWEEN.Tween(tempColor)
+        new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
             .to({ hex: new Color(0x000000).getHex() }, this._magnetizationToMarker.duration / 2)
             .start()
             .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
@@ -175,6 +179,8 @@ export class MapCursor {
             0.065,
             4,
             this._magnetizationToMarker.duration / 2);
+
+        this._enterExitTweenGroup.update(this._magnetizationToMarker.duration);
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
@@ -183,16 +189,16 @@ export class MapCursor {
         document.body.style.cursor = 'default';
 
         const marker = <Marker>markerObject.userData.marker;
-        marker.setMouseExitStyle();
+        marker.setMouseOveringStyle(false);
 
-        TWEEN.removeAll();
+        this._enterExitTweenGroup.removeAll();
 
-        new TWEEN.Tween(this._magnetizationToMarker)
+        new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
             .to({ value: 0 }, this._magnetizationToMarker.duration)
             .start();
 
         let tempColor = { hex: this._ringMaterial.color.getHex() };
-        new TWEEN.Tween(tempColor)
+        new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
             .to({ hex: new Color(0xffffff).getHex() }, this._magnetizationToMarker.duration / 2)
             .start()
             .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
@@ -202,13 +208,15 @@ export class MapCursor {
             0.0425,
             16,
             this._magnetizationToMarker.duration);
+
+        this._enterExitTweenGroup.update(this._magnetizationToMarker.duration);
     }
 
     private tweenRingGeometry = (innerRadius: number,
                                  outerRadius: number,
                                  thetaSegments: number,
                                  duration: number): void => {
-        new TWEEN.Tween(this._ringData)
+        new TWEEN.Tween(this._ringData, this._enterExitTweenGroup)
             .to({ innerRadius, outerRadius, thetaSegments }, duration)
             .start()
             .onUpdate(() => {

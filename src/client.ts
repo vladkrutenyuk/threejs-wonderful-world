@@ -14,7 +14,7 @@ initMarkers.then(() => console.log("Markers initing was finished!"));
 const mapCursor = new MapCursor(world.scene, world.camera, map);
 const input = new Input();
 input.setMouseMoveEventListener(mapCursor.positioning);
-input.setMouseClickEventListener(mapCursor.selectMarker);
+input.setMouseClickEventListener(mapCursor.selectOveredMarker);
 
 const mainUpdate = (): void => {
     requestAnimationFrame(mainUpdate);

@@ -21,7 +21,7 @@ export class Map {
     public get height() { return this._geometry.parameters.height };
     private _material: MeshPhongMaterial;
 
-    private _scene: Scene;
+    private readonly _scene: Scene;
 
     private _markersGroup: Group = new Group();
     public get markersGroup() { return this._markersGroup };
@@ -96,33 +96,33 @@ export class Map {
         this._material.map.repeat.setScalar(0.1);
     }
 
-    private getMapScale = (): number => {
-        return 1 / this._material.map.repeat.x;
-    }
-
-    private getOffsetLimit = (): number => {
-        return (this.getMapScale() * 0.5 - 0.5) / this.getMapScale();
-    }
-
-    private offsetMap = (valueX: number, valueY: number): void => {
-        this._material.map.offset
-            .set(this._material.map.offset.x + valueX, this._material.map.offset.y + valueY)
-
-        this.fixOffsetMap()
-    }
-
-    private scaleMap = (value: number): void => {
-        this._material.map.repeat.addScalar(value).clampScalar(0.1, 1)
-
-        this.fixOffsetMap()
-
-        this._markersGroup.scale.setScalar(this.getMapScale())
-    }
-
-    private fixOffsetMap = (): void => {
-        this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
-
-        this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale()
-        this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale()
-    }
+    // private getMapScale = (): number => {
+    //     return 1 / this._material.map.repeat.x;
+    // }
+    //
+    // private getOffsetLimit = (): number => {
+    //     return (this.getMapScale() * 0.5 - 0.5) / this.getMapScale();
+    // }
+    //
+    // private offsetMap = (valueX: number, valueY: number): void => {
+    //     this._material.map.offset
+    //         .set(this._material.map.offset.x + valueX, this._material.map.offset.y + valueY)
+    //
+    //     this.fixOffsetMap()
+    // }
+    //
+    // private scaleMap = (value: number): void => {
+    //     this._material.map.repeat.addScalar(value).clampScalar(0.1, 1)
+    //
+    //     this.fixOffsetMap()
+    //
+    //     this._markersGroup.scale.setScalar(this.getMapScale())
+    // }
+    //
+    // private fixOffsetMap = (): void => {
+    //     this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
+    //
+    //     this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale()
+    //     this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale()
+    // }
 }

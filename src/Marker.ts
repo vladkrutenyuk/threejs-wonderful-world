@@ -3,6 +3,7 @@ import {
     Mesh, MeshBasicMaterial, OctahedronGeometry, Scene,
     Vector3
 } from "three";
+import {Tween} from "@tweenjs/tween.js";
 
 export type MarkerData = {
     "title": string,
@@ -62,11 +63,12 @@ export class Marker {
         this._visualGroup.parent = this._colliderMesh;
     }
 
-    public setMouseEnterStyle = (): void => {
-        this._visualGroup.scale.setScalar(1.2);
-    }
-
-    public setMouseExitStyle = (): void => {
-        this._visualGroup.scale.setScalar(1);
+    public setMouseOveringStyle = (isEntering: boolean): void => {
+        new Tween(this._visualGroup.scale)
+            .to(new Vector3().setScalar(isEntering ? 1.2 : 1), 250)
+            .start();
+        new Tween(this._visualGroup.rotation)
+            .to({z: isEntering ? Math.PI / 2 : 0}, 250)
+            .start();
     }
 }
