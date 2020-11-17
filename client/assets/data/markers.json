@@ -1,0 +1,66 @@
+[
+  {
+    "title": "Colosseum",
+    "mapNormalizedPosition": {
+      "x": 0.536 ,
+      "y": 0.729,
+      "z": 0.51
+    }
+  },
+  {
+    "title": "Great Wall of China",
+    "mapNormalizedPosition": {
+      "x": 0.85,
+      "y": 0.73,
+      "z": 0.51
+    }
+  },
+  {
+    "title": "Machu Picchu",
+    "mapNormalizedPosition": {
+      "x": 0.3,
+      "y": 0.43,
+      "z": 0.51
+    }
+  },
+  {
+    "title": "Petra",
+    "mapNormalizedPosition": {
+      "x": 0.6,
+      "y": 0.66,
+      "z": 0.54
+    }
+  },
+  {
+      "title": "Taj Mahal",
+    "mapNormalizedPosition": {
+      "x": 0.7,
+      "y": 0.65,
+      "z": 0.51
+    }
+  },
+  {
+    "title": "Christ the Redeemer",
+    "mapNormalizedPosition": {
+      "x": 0.38,
+      "y": 0.37,
+      "z": 0.51
+    }
+  },
+  {
+    "title": "Chichen Itza",
+    "mapNormalizedPosition": {
+      "x": 0.26,
+      "y": 0.62,
+      "z": 0.5
+    }
+  },
+  {
+    "title": "Giza pyramid complex",
+    "mapNormalizedPosition": {
+      "x": 0.58,
+      "y": 0.657,
+      "z": 0.51
+    }
+  }
+]
