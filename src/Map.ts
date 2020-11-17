@@ -9,9 +9,10 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     PointsMaterial,
-    Points,
+    Points, Vector2,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
+import TWEEN, {Tween} from "@tweenjs/tween.js";
 
 export class Map {
     private _mesh: Mesh;
@@ -43,7 +44,7 @@ export class Map {
             transparent: true,
             opacity: 0.6
         })
-        // this._material.map.center.set(0.5, 0.5);
+        this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);
         this._scene.add(this._mesh);
 
@@ -92,8 +93,16 @@ export class Map {
     }
 
     public goToMarker = (x: number, y: number): void => {
-        this._material.map.center.set(x, y);
-        this._material.map.repeat.setScalar(0.1);
+        // this._material.map.center.set(x, y);
+        new Tween(this._material.map)
+            .to({
+                center: {x: x - x * 0.05, y: y - y * 0.05},
+                repeat: new Vector2().setScalar(0.1)
+                },
+                2500).easing(TWEEN.Easing.Quadratic.InOut)
+            .start();
+        // this._material.map.center.set(x, y);
+        // this._material.map.repeat.setScalar(0.1);
     }
 
     // private getMapScale = (): number => {

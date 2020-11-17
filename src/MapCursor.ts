@@ -164,12 +164,12 @@ export class MapCursor {
         this._enterExitTweenGroup.removeAll();
         this._enterExitTweenGroup = new TWEEN.Group();
 
-        new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
+        new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
             .to({ value: 0.9 }, this._magnetizationToMarker.duration)
             .start();
 
         let tempColor = { hex: this._ringMaterial.color.getHex() };
-        new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
+        new Tween(tempColor, this._enterExitTweenGroup)
             .to({ hex: new Color(0x000000).getHex() }, this._magnetizationToMarker.duration / 2)
             .start()
             .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
@@ -193,12 +193,12 @@ export class MapCursor {
 
         this._enterExitTweenGroup.removeAll();
 
-        new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
+        new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
             .to({ value: 0 }, this._magnetizationToMarker.duration)
             .start();
 
         let tempColor = { hex: this._ringMaterial.color.getHex() };
-        new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
+        new Tween(tempColor, this._enterExitTweenGroup)
             .to({ hex: new Color(0xffffff).getHex() }, this._magnetizationToMarker.duration / 2)
             .start()
             .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
@@ -216,7 +216,7 @@ export class MapCursor {
                                  outerRadius: number,
                                  thetaSegments: number,
                                  duration: number): void => {
-        new TWEEN.Tween(this._ringData, this._enterExitTweenGroup)
+        new Tween(this._ringData, this._enterExitTweenGroup)
             .to({ innerRadius, outerRadius, thetaSegments }, duration)
             .start()
             .onUpdate(() => {
