@@ -11,9 +11,10 @@ const map = new Map(world.scene);
 const initMarkers = map.initMarkers(jsonDataUrl);
 initMarkers.then(() => console.log("Markers initing was finished!"));
 
-const mapCursor = new MapCursor(world.scene, world.camera, map.mesh, map.markersGroup);
+const mapCursor = new MapCursor(world.scene, world.camera, map);
 const input = new Input();
 input.setMouseMoveEventListener(mapCursor.positioning);
+input.setMouseClickEventListener(mapCursor.selectMarker);
 
 const mainUpdate = (): void => {
     requestAnimationFrame(mainUpdate);

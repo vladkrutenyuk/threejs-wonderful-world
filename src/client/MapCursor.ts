@@ -5,7 +5,8 @@ import {
     Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
 } from "/build/three.module.js";
 import { TWEEN } from "/jsm/libs/tween.module.min";
-import { Marker, MarkerData } from "./Marker.js";
+import { Map } from "./Map.js";
+import {Marker, MarkerData} from "./Marker.js";
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -27,11 +28,13 @@ export class MapCursor {
 
     private _scene: Scene;
     private readonly _camera: Camera;
+    private _map: Map;
     private readonly _mapMesh: Mesh;
     private _markersGroup: Group;
 
-    private _currentMarker: Object3D = null;
-    private _lastMarkerPosition: Vector3 = new Vector3();
+    private _overedMarker: Object3D = null;
+    private _lastOveredMarkerPosition: Vector3 = new Vector3();
+    private _selectedMarker: Object3D
 
     private _raycaster: Raycaster = new Raycaster();
     private _mapPosition: Vector3 = new Vector3();
@@ -40,11 +43,12 @@ export class MapCursor {
         duration: 500
     };
 
-    constructor(scene: Scene, camera: Camera, mapMesh: Mesh, mapMarkersGroup: Group) {
+    constructor(scene: Scene, camera: Camera, map: Map) {
         this._scene = scene;
         this._camera = camera;
-        this._mapMesh = mapMesh;
-        this._markersGroup = mapMarkersGroup;
+        this._map = map;
+        this._mapMesh = map.mesh;
+        this._markersGroup = map.markersGroup;
         this.init();
     } 
 
@@ -86,6 +90,7 @@ export class MapCursor {
     }
 
     public positioning = (mousePosition: Vector2) => {
+        if (this._selectedMarker != null) return;
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -101,24 +106,38 @@ export class MapCursor {
         const markerIntersection = this._raycaster.intersectObjects(this._markersGroup.children)[0];
 
         if (markerIntersection == null){
-            this._currentMarker != null &&
-            this.onMarkerExit(this._currentMarker);
+            this._overedMarker != null &&
+            this.onMarkerExit(this._overedMarker);
         } else {
-            if (this._currentMarker == null) {
+            if (this._overedMarker == null) {
                 this.onMarkerEnter(markerIntersection.object);
             } else {
-                if (this._currentMarker != markerIntersection.object) {
-                    this.onMarkerExit(this._currentMarker);
+                if (this._overedMarker != markerIntersection.object) {
+                    this.onMarkerExit(this._overedMarker);
                     this.onMarkerEnter(markerIntersection.object);
                 }
             }
         }
     }
 
+    public selectMarker = (): void => {
+        if (this._overedMarker == null || this._selectedMarker != null) return;
+        document.body.style.cursor = 'default';
+        this._selectedMarker = this._overedMarker;
+
+        const markerData = <MarkerData>this._selectedMarker.userData.marker.data;
+        this._map.goToMarker(markerData.mapNormalizedPosition.x, markerData.mapNormalizedPosition.y);
+    }
+
+    public deselectMarker = (): void => {
+        if (this._selectedMarker == null) return;
+        this._selectedMarker = null;
+    }
+
     private setCursorPositionMagically = (): void => {
         const position = new Vector3().lerpVectors(
             this._mapPosition,
-            this._currentMarker != null ? this._currentMarker.position : this._lastMarkerPosition,
+            this._overedMarker != null ? this._overedMarker.position : this._lastOveredMarkerPosition,
             this._magnetizationToMarker.value);
         const alpha = 0.15;
 
@@ -132,7 +151,7 @@ export class MapCursor {
     }
 
     private onMarkerEnter = (markerObject: Object3D): void => {
-        this._currentMarker = markerObject;
+        this._overedMarker = markerObject;
         document.body.style.cursor = 'pointer';
 
         const marker = <Marker>markerObject.userData.marker;
@@ -158,8 +177,8 @@ export class MapCursor {
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
-        this._lastMarkerPosition.copy(this._currentMarker.position);
-        this._currentMarker = null;
+        this._lastOveredMarkerPosition.copy(this._overedMarker.position);
+        this._overedMarker = null;
         document.body.style.cursor = 'default';
 
         const marker = <Marker>markerObject.userData.marker;

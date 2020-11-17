@@ -1,5 +1,5 @@
 import {
-    BackSide,
+    BackSide, Group,
     Mesh, MeshBasicMaterial, OctahedronGeometry, Scene,
     Vector3
 } from "/build/three.module.js";
@@ -7,8 +7,11 @@ import { TWEEN } from "/jsm/libs/tween.module.min";
 
 export type MarkerData = {
     "title": string,
-    "mapNormalizedPositionX": number,
-    "mapNormalizedPositionY": number
+    "mapNormalizedPosition": {
+        "x": number,
+        "y": number,
+        "z": number
+    }
 }
 
 export class Marker {
@@ -21,6 +24,8 @@ export class Marker {
     private readonly _wireframeMesh: Mesh;
     public get coloredMesh() { return this._coloredMesh };
     private readonly _coloredMesh: Mesh;
+
+    private _visualGroup: Group = new Group();
 
     constructor(markerData: MarkerData) {
         this._data = markerData;
@@ -37,37 +42,32 @@ export class Marker {
         this._coloredMesh = new Mesh(
             new OctahedronGeometry(0.035),
             new MeshBasicMaterial( { wireframe: false, color: 0x000000, side: BackSide } ));
+
+
     }
 
-    public initOnMap = (mapWidth: number, mapHeight: number, scene: Scene): void => {
+    public initOnMap = (scene: Scene,
+                        mapWidth: number,
+                        mapHeight: number,
+                        displacementScale: number,
+                        displacementBias: number): void => {
         this._colliderMesh.position.copy(new Vector3(
-            mapWidth * (this._data.mapNormalizedPositionX - 0.5),
-            mapHeight * (this._data.mapNormalizedPositionY - 0.5),
-            0.05));
+            mapWidth * (this._data.mapNormalizedPosition.x - 0.5),
+            mapHeight * (this._data.mapNormalizedPosition.y - 0.5),
+            this._data.mapNormalizedPosition.z * displacementScale + displacementBias + 0.07));
         scene.add(this._colliderMesh);
 
+        scene.add(this._visualGroup);
         scene.add(this._wireframeMesh);
-        this._wireframeMesh.parent = this._colliderMesh;
-
-        scene.add(this._coloredMesh);
-        this._coloredMesh.parent = this._colliderMesh;
+        this._visualGroup.add(this._coloredMesh, this._wireframeMesh);
+        this._visualGroup.parent = this._colliderMesh;
     }
 
     public setMouseEnterStyle = (): void => {
-        new TWEEN.Tween(this._wireframeMesh.scale)
-            .to(new Vector3().setScalar(1.2), 300)
-            .start();
-        new TWEEN.Tween(this._coloredMesh.scale)
-            .to(new Vector3().setScalar(1.2), 300)
-            .start();
+        this._visualGroup.scale.setScalar(1.2);
     }
 
     public setMouseExitStyle = (): void => {
-        new TWEEN.Tween(this._wireframeMesh.scale)
-            .to(new Vector3().setScalar(1), 300)
-            .start();
-        new TWEEN.Tween(this._coloredMesh.scale)
-            .to(new Vector3().setScalar(1), 300)
-            .start();
+        this._visualGroup.scale.setScalar(1);
     }
 }

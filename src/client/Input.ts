@@ -5,6 +5,7 @@ export class Input {
     public get mousePosition() { return this._mousePosition };
 
     private _onMouseMoveEventFunc: (mousePosition: Vector2) => void;
+    private _onMouseClickEventFunc: () => void;
 
     constructor() {
         this.init();
@@ -12,6 +13,7 @@ export class Input {
 
     private init = (): void => {
         document.addEventListener('mousemove', this.onMouseMove, false);
+        document.addEventListener('click', this.onMouseClick, false);
     }
 
     private onMouseMove = (event: MouseEvent): void => {
@@ -21,7 +23,15 @@ export class Input {
         this._onMouseMoveEventFunc(this.mousePosition);
     }
 
+    private onMouseClick = (): void => {
+        this._onMouseClickEventFunc();
+    }
+
     public setMouseMoveEventListener = (func: (mousePosition: Vector2) => void) => {
         this._onMouseMoveEventFunc = func;
+    }
+
+    public setMouseClickEventListener = (func: () => void) => {
+        this._onMouseClickEventFunc = func;
     }
 }
