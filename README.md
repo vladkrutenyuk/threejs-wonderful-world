@@ -1,7 +1,8 @@
-# 3D Interactive World Map
-
+# Wonderful World
+### 3D Interactive Map
 #### Web / Typescript / Three.js
 
+![alt-текст](https://github.com/vladkrutenyuk/wonderful-world-threejs/blob/picture-preview/preview.png "Meow :)")
 ---
 ### Run
 1. Being in project folder `cd client`
