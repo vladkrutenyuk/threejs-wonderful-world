@@ -9,7 +9,7 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     PointsMaterial,
-    Points, Vector2,
+    Points, Vector2, Vector3,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
@@ -92,46 +92,40 @@ export class Map {
         }
     }
 
-    public goToMarker = (x: number, y: number): void => {
-        // this._material.map.center.set(x, y);
-        new Tween(this._material.map)
-            .to({
-                center: {x: x - x * 0.05, y: y - y * 0.05},
-                repeat: new Vector2().setScalar(0.1)
-                },
-                2500).easing(TWEEN.Easing.Quadratic.InOut)
-            .start();
-        // this._material.map.center.set(x, y);
-        // this._material.map.repeat.setScalar(0.1);
+    public goToMarker = (normalizedPosition: Vector3): void => {
+        this.setMapZoom(normalizedPosition.x, normalizedPosition.y, 10);
+        // поднять дисплейсмент карты через normalizedPosition.z
     }
 
-    // private getMapScale = (): number => {
-    //     return 1 / this._material.map.repeat.x;
-    // }
-    //
-    // private getOffsetLimit = (): number => {
-    //     return (this.getMapScale() * 0.5 - 0.5) / this.getMapScale();
-    // }
-    //
-    // private offsetMap = (valueX: number, valueY: number): void => {
-    //     this._material.map.offset
-    //         .set(this._material.map.offset.x + valueX, this._material.map.offset.y + valueY)
-    //
-    //     this.fixOffsetMap()
-    // }
-    //
-    // private scaleMap = (value: number): void => {
-    //     this._material.map.repeat.addScalar(value).clampScalar(0.1, 1)
-    //
-    //     this.fixOffsetMap()
-    //
-    //     this._markersGroup.scale.setScalar(this.getMapScale())
-    // }
-    //
-    // private fixOffsetMap = (): void => {
-    //     this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
-    //
-    //     this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale()
-    //     this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale()
-    // }
+    public backFromMarker = (): void => {
+        this.setMapZoom(0.5, 0.5, 1);
+        // вернуть дисплейсмент карты обратно
+    }
+
+    private setMapZoom = (x: number, y: number, scale: number): void => {
+        new Tween(this._material.map)
+            .to({
+                    offset: { x: x - 0.5, y: y - 0.5 },
+                    repeat: { x: 1 / scale, y: 1 / scale }
+                },
+                3000)
+            .easing(TWEEN.Easing.Quadratic.InOut)
+            .start()
+            .onUpdate(() => {
+                this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
+
+                this._markersGroup.scale.setScalar(this.getMapScale());
+                this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale()
+                this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale()
+                this._markersGroup.children.forEach((x) => {x.scale.setScalar(2 / this.getMapScale())});
+            });
+    }
+
+    private getMapScale = (): number => {
+        return 1 / this._material.map.repeat.x;
+    }
+
+    private getOffsetLimit = (): number => {
+        return (this.getMapScale() * 0.5 - 0.5) / this.getMapScale();
+    }
 }

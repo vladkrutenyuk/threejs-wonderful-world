@@ -130,7 +130,7 @@ export class MapCursor {
         this._selectedMarker = this._overedMarker;
 
         const markerData = <MarkerData>this._selectedMarker.userData.marker.data;
-        this._map.goToMarker(markerData.mapNormalizedPosition.x, markerData.mapNormalizedPosition.y);
+        this._map.goToMarker(markerData.mapNormalizedPosition);
     }
 
     public deselectMarker = (): void => {
