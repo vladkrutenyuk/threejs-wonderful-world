@@ -2,6 +2,7 @@ import { Map } from "./Map";
 import { World } from "./World";
 import { MapCursor } from "./MapCursor";
 import { Input } from "./Input";
+import TWEEN from "@tweenjs/tween.js";
 
 const jsonDataUrl: string = "data/markers.json";
 
@@ -18,6 +19,7 @@ input.setMouseClickEventListener(mapCursor.setOveredMarkerSelection);
 
 const mainUpdate = (): void => {
     requestAnimationFrame(mainUpdate);
+    TWEEN.update();
     mapCursor.update();
     world.render();
 }

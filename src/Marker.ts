@@ -15,6 +15,8 @@ export type MarkerData = {
 }
 
 export class Marker {
+    public static readonly additionalOffsetZ = 0.07;
+    public static readonly multiplierScaleZ = 1.5;
     private readonly _data: MarkerData;
     public get data() { return this._data };
 
@@ -35,7 +37,7 @@ export class Marker {
         this._colliderMesh = new Mesh(
             new OctahedronGeometry(0.075),
             new MeshBasicMaterial({ visible: false} ));
-        this._colliderMesh.scale.setComponent(2, 1.5);
+        this._colliderMesh.scale.setComponent(2, Marker.multiplierScaleZ);
         this._colliderMesh.userData = { marker: this };
 
         this._wireframeMesh = new Mesh(
@@ -57,7 +59,7 @@ export class Marker {
         this._colliderMesh.position.copy(new Vector3(
             mapWidth * (this._data.mapNormalizedPosition.x - 0.5),
             mapHeight * (this._data.mapNormalizedPosition.y - 0.5),
-            this._data.mapNormalizedPosition.z * displacementScale + displacementBias + 0.07));
+            this._data.mapNormalizedPosition.z * displacementScale + displacementBias + Marker.additionalOffsetZ));
         scene.add(this._colliderMesh);
 
         scene.add(this._visualGroup);

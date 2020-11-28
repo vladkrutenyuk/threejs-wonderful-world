@@ -5,9 +5,8 @@ import {
     Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
 } from "three";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
-
 import { Map } from "./Map";
-import {Marker, MarkerData} from "./Marker";
+import { Marker } from "./Marker";
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -45,6 +44,8 @@ export class MapCursor {
         value: 0,
         duration: 500
     };
+
+    private _isBlocked: boolean = false;
 
     constructor(scene: Scene, camera: Camera, map: Map) {
         this._scene = scene;
@@ -88,13 +89,11 @@ export class MapCursor {
     }
 
     public update = (): void => {
-        TWEEN.update();
         this._enterExitTweenGroup.update();
         this.setCursorPositionMagically();
     }
 
     public positioning = (mousePosition: Vector2) => {
-        // if (this._selectedMarker != null) return;
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -106,6 +105,8 @@ export class MapCursor {
 
         mapIntersection != null &&
         this._mapPosition.copy(mapIntersection.point);
+
+        // if (this._isBlocked) return;
 
         const markerIntersection = this._raycaster.intersectObjects(this._markersGroup.children)[0];
 
@@ -124,7 +125,7 @@ export class MapCursor {
         }
     }
 
-    public setOveredMarkerSelection = (): void => {
+    public setOveredMarkerSelection = async () => {
         if (this._overedMarker == null) return;
 
         const marker = <Marker>this._overedMarker.userData.marker;
@@ -139,7 +140,9 @@ export class MapCursor {
             this._map.goToMarker(<Vector3>marker.data.mapNormalizedPosition);
         }
 
-        // document.body.style.cursor = 'default';
+        document.body.style.cursor = 'default';
+        this._isBlocked = true;
+        await setTimeout(() => {this._isBlocked = false}, 3000);
     }
 
     private setCursorPositionMagically = (): void => {
@@ -165,6 +168,8 @@ export class MapCursor {
     }
 
     private onMarkerEnter = (markerObject: Object3D): void => {
+        if (this._isBlocked) return;
+
         this._overedMarker = markerObject;
         document.body.style.cursor = 'pointer';
 
@@ -194,7 +199,6 @@ export class MapCursor {
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
-        // this._lastOveredMarkerPosition.copy(this._overedMarker.position);
         this._overedMarker.getWorldPosition(this._lastOveredMarkerPosition);
         this._overedMarker = null;
         document.body.style.cursor = 'default';

@@ -9,12 +9,14 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     PointsMaterial,
-    Points, Vector2, Vector3,
+    Points, Vector3,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
 
 export class Map {
+    private readonly _zoomedScale = 10;
+
     private _mesh: Mesh;
     public get mesh() { return this._mesh };
     private _geometry: PlaneGeometry;
@@ -93,36 +95,60 @@ export class Map {
     }
 
     public goToMarker = (normalizedPosition: Vector3): void => {
-        this.setMapZoom(normalizedPosition.x, normalizedPosition.y, 10);
-        // поднять дисплейсмент карты через normalizedPosition.z
+        this.setMapZoom(normalizedPosition.x, normalizedPosition.y, this._zoomedScale);
     }
 
     public backFromMarker = (): void => {
         this.setMapZoom(0.5, 0.5, 1);
-        // вернуть дисплейсмент карты обратно
     }
 
     private setMapZoom = (x: number, y: number, scale: number): void => {
-        new Tween(this._material.map)
+        new Tween(this._material)
             .to({
-                    offset: { x: x - 0.5, y: y - 0.5 },
-                    repeat: { x: 1 / scale, y: 1 / scale }
+                    map: {
+                        offset: { x: x - 0.5, y: y - 0.5 },
+                        repeat: { x: 1 / scale, y: 1 / scale }},
+                    displacementScale: MathUtils.lerp(
+                        0.45,
+                        0.45 * scale / 3,
+                        (scale - 1) / (this._zoomedScale - 1)),
+                    displacementBias: MathUtils.lerp(
+                        -0.25,
+                        -0.25 * scale / 3,
+                        (scale - 1) / (this._zoomedScale - 1))
                 },
                 3000)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .start()
             .onUpdate(() => {
                 this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
-                this.zoomMarkers();
+                this.zoomMarkers(this._material.map.repeat.x);
             });
     }
 
-    private zoomMarkers = (): void => {
+    private zoomMarkers = (scale: number): void => {
         this._markersGroup.scale.setScalar(this.getMapScale());
-        this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale();
-        this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale();
-        this._markersGroup.children.forEach((x) => { x.scale.setScalar(1 / this.getMapScale()) });
+
+        this._markersGroup.position.x =
+            -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale();
+        this._markersGroup.position.y =
+            -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale();
+
+        this._markersGroup.children.forEach((markerObj) => {
+            markerObj.scale.set(
+                1 / this.getMapScale(),
+                1 / this.getMapScale(),
+                1 / this.getMapScale() * Marker.multiplierScaleZ);
+            markerObj.position.setZ(
+                (markerObj.userData.marker.data.mapNormalizedPosition.z
+                    * this._material.displacementScale
+                    + this._material.displacementBias
+                    + Marker.additionalOffsetZ)
+                * scale
+            )
+        });
     }
+
 
     private getMapScale = (): number => {
         return 1 / this._material.map.repeat.x;
