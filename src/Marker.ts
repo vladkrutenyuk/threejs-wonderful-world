@@ -27,6 +27,9 @@ export class Marker {
 
     private _visualGroup: Group = new Group();
 
+    public get isSelected() { return this._isSelected };
+    private _isSelected: boolean = false;
+
     constructor(markerData: MarkerData) {
         this._data = markerData;
         this._colliderMesh = new Mesh(
@@ -65,10 +68,18 @@ export class Marker {
 
     public setMouseOveringStyle = (isEntering: boolean): void => {
         new Tween(this._visualGroup.scale)
-            .to(new Vector3().setScalar(isEntering ? 1.2 : 1), 250)
+            .to(new Vector3().setScalar(isEntering ? 1.3 : 1), 250)
             .start();
+    }
+
+    public beSelected = (isSelected: boolean): void => {
         new Tween(this._visualGroup.rotation)
-            .to({z: isEntering ? Math.PI / 2 : 0}, 250)
+            .to({z: isSelected ? Math.PI / 2 : 0}, 250)
             .start();
+
+        this._isSelected = isSelected;
+        // показать/убрать текст с названием чуда
+
+        // включить/выключить 3д модель чуда
     }
 }

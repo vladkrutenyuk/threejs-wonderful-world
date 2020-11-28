@@ -94,7 +94,7 @@ export class MapCursor {
     }
 
     public positioning = (mousePosition: Vector2) => {
-        if (this._selectedMarker != null) return;
+        // if (this._selectedMarker != null) return;
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -124,27 +124,37 @@ export class MapCursor {
         }
     }
 
-    public selectOveredMarker = (): void => {
-        if (this._overedMarker == null || this._selectedMarker != null) return;
-        document.body.style.cursor = 'default';
-        this._selectedMarker = this._overedMarker;
+    public setOveredMarkerSelection = (): void => {
+        if (this._overedMarker == null) return;
 
-        const markerData = <MarkerData>this._selectedMarker.userData.marker.data;
-        this._map.goToMarker(markerData.mapNormalizedPosition);
-    }
+        const marker = <Marker>this._overedMarker.userData.marker;
 
-    public deselectMarker = (): void => {
-        if (this._selectedMarker == null) return;
-        this._selectedMarker = null;
+        if (marker.isSelected) {
+            console.log("unselect " + marker.data.title)
+            marker.beSelected(false);
+            this._map.backFromMarker();
+        } else {
+            console.log("select " + marker.data.title)
+            marker.beSelected(true);
+            this._map.goToMarker(<Vector3>marker.data.mapNormalizedPosition);
+        }
+
+        // document.body.style.cursor = 'default';
     }
 
     private setCursorPositionMagically = (): void => {
-        const position = new Vector3().lerpVectors(
-            this._mapPosition,
-            this._overedMarker != null ? this._overedMarker.position : this._lastOveredMarkerPosition,
-            this._magnetizationToMarker.value);
-        const alpha = 0.15;
+        let markerWorldPositionForLerp = new Vector3();
 
+        if (this._overedMarker != null) {
+            this._overedMarker.getWorldPosition(markerWorldPositionForLerp);
+        } else {
+            markerWorldPositionForLerp.copy(this._lastOveredMarkerPosition);
+        }
+
+        const position = new Vector3().lerpVectors(
+            this._mapPosition, markerWorldPositionForLerp, this._magnetizationToMarker.value);
+
+        const alpha = 0.15;
         this._cursor.position.lerpVectors(this._cursor.position, position, alpha);
 
         this._horizontalLine.position.y = MathUtils.lerp(this._horizontalLine.position.y, position.y, alpha);
@@ -184,7 +194,8 @@ export class MapCursor {
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
-        this._lastOveredMarkerPosition.copy(this._overedMarker.position);
+        // this._lastOveredMarkerPosition.copy(this._overedMarker.position);
+        this._overedMarker.getWorldPosition(this._lastOveredMarkerPosition);
         this._overedMarker = null;
         document.body.style.cursor = 'default';
 

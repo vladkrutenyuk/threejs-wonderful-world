@@ -113,12 +113,15 @@ export class Map {
             .start()
             .onUpdate(() => {
                 this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
-
-                this._markersGroup.scale.setScalar(this.getMapScale());
-                this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale()
-                this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale()
-                this._markersGroup.children.forEach((x) => {x.scale.setScalar(2 / this.getMapScale())});
+                this.zoomMarkers();
             });
+    }
+
+    private zoomMarkers = (): void => {
+        this._markersGroup.scale.setScalar(this.getMapScale());
+        this._markersGroup.position.x = -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale();
+        this._markersGroup.position.y = -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale();
+        this._markersGroup.children.forEach((x) => { x.scale.setScalar(1 / this.getMapScale()) });
     }
 
     private getMapScale = (): number => {
