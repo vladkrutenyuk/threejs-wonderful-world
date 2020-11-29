@@ -149,17 +149,21 @@ export class MapCursor {
 
         const markerObj = this._overedMarker;
         const marker = <Marker>markerObj.userData.marker;
-        this.onMarkerExit(markerObj);
+        marker.visualGroup.scale.multiplyScalar(0.5);
 
         if (marker.isSelected) {
-            console.log("Back from " + marker.data.title)
             marker.beSelected(false);
             this._map.backFromMarker();
+
+            console.log("Back from " + marker.data.title)
         } else {
-            console.log("Go to " + marker.data.title)
             marker.beSelected(true);
             this._map.goToMarker(markerObj);
+
+            console.log("Go to " + marker.data.title)
         }
+
+        this.onMarkerExit(markerObj);
 
         document.body.style.cursor = 'default';
         this._isBlocked = true;

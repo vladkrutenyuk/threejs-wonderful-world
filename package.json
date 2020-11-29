@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "@tweenjs/tween.js": "18",
+    "string-lerp": "^1.0.0",
     "three": "^0.122.0"
   },
   "devDependencies": {

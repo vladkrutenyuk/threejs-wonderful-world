@@ -4,25 +4,45 @@ body {
 }
 
 .headerSpace {
-    margin-top: 20px;
     alignment: center;
     position: absolute;
     width: 100%;
 
     color: #f2f2f2;
     font-family: monospace;
-    font-size: 17px;
     text-align: center;
     text-shadow: 1px 3px 0.4em black;
 
     user-select: none;
-    /*pointer-events: none;*/
     z-index: 1;
 }
 
-.signText {
+#title {
+    margin-top: 10px;
+    padding: 5px;
+    font-size: 17px;
+}
+
+#wonderName {
+    padding: 5px;
     font-size: 12px;
-    font-weight: normal;
+}
+
+.lowerSpace {
+    padding: 7px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+
+    color: #f2f2f2;
+    font-family: monospace;
+    font-size: 13px;
+    text-align: center;
+    text-shadow: 1px 3px 0.4em black;
+    background-color: black;
+
+    user-select: none;
+    z-index: 1;
 }
 
 .myLink {

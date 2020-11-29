@@ -1,9 +1,9 @@
 import {
-    BackSide, Group,
-    Mesh, MeshBasicMaterial, OctahedronGeometry, Scene,
-    Vector3
+    Scene, BackSide, Group, Vector3,
+    Mesh, MeshBasicMaterial, OctahedronGeometry
 } from "three";
-import TWEEN, {Tween} from "@tweenjs/tween.js";
+import TWEEN, { Tween } from "@tweenjs/tween.js";
+import { UIManager } from "./UIManager";
 
 export type MarkerData = {
     "title": string,
@@ -18,18 +18,19 @@ export class Marker {
     public static readonly additionalOffsetZ = 0.07;
     public static readonly multiplierScaleZ = 1.5;
     private readonly _data: MarkerData;
-    public get data() { return this._data };
+    public get data(): MarkerData { return this._data };
 
-    public get colliderMesh() { return this._colliderMesh };
+    public get colliderMesh(): Mesh { return this._colliderMesh };
     private readonly _colliderMesh: Mesh;
-    public get wireframeMesh() { return this._wireframeMesh };
+    public get wireframeMesh(): Mesh { return this._wireframeMesh };
     private readonly _wireframeMesh: Mesh;
-    public get coloredMesh() { return this._coloredMesh };
+    public get coloredMesh(): Mesh { return this._coloredMesh };
     private readonly _coloredMesh: Mesh;
 
+    public get visualGroup(): Group { return this._visualGroup }
     private _visualGroup: Group = new Group();
 
-    public get isSelected() { return this._isSelected };
+    public get isSelected(): boolean { return this._isSelected };
     private _isSelected: boolean = false;
 
     constructor(markerData: MarkerData) {
@@ -47,8 +48,6 @@ export class Marker {
         this._coloredMesh = new Mesh(
             new OctahedronGeometry(0.035),
             new MeshBasicMaterial( { wireframe: false, color: 0x000000, side: BackSide } ));
-
-
     }
 
     public initOnMap = (scene: Scene,
@@ -71,7 +70,11 @@ export class Marker {
     public setMouseOveringStyle = (isEntering: boolean): void => {
         new Tween(this._visualGroup.scale)
             .to(new Vector3().setScalar(isEntering ? 1.3 : 1), 250)
-            .start();
+            .start()
+            .onComplete(() => {
+                UIManager.setTitle(isEntering || this._isSelected ? "Wonder of the world" : "Wonders of the world");
+                UIManager.setWonderNameTitle(isEntering || this._isSelected ? this.data.title : "");
+            });
     }
 
     public beSelected = (isSelected: boolean): void => {
@@ -85,8 +88,5 @@ export class Marker {
             .start();
 
         this._isSelected = isSelected;
-        // показать/убрать текст с названием чуда
-
-        // включить/выключить 3д модель чуда
     }
 }
