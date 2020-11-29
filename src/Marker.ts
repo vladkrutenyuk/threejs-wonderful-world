@@ -3,7 +3,7 @@ import {
     Mesh, MeshBasicMaterial, OctahedronGeometry, Scene,
     Vector3
 } from "three";
-import {Tween} from "@tweenjs/tween.js";
+import TWEEN, {Tween} from "@tweenjs/tween.js";
 
 export type MarkerData = {
     "title": string,
@@ -75,8 +75,13 @@ export class Marker {
     }
 
     public beSelected = (isSelected: boolean): void => {
-        new Tween(this._visualGroup.rotation)
-            .to({z: isSelected ? Math.PI / 2 : 0}, 250)
+        new Tween(this._colliderMesh.rotation)
+            .to({
+                z: isSelected ?  6 * -Math.PI / 2 : 0,
+                    y: isSelected ? -Math.PI / 2 : 0
+                },
+                2000)
+            .easing(TWEEN.Easing.Exponential.In)
             .start();
 
         this._isSelected = isSelected;

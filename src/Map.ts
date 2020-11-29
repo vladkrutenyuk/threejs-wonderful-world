@@ -9,13 +9,16 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     PointsMaterial,
-    Points, Vector3,
+    Points, Vector3, Object3D, PerspectiveCamera,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
+import {World} from "./World";
 
 export class Map {
-    private readonly _zoomedScale = 10;
+    public readonly zoomedScale = 10;
+    public readonly zoomDuration = 2500;
+    private readonly zoomCenterOffsetY = 0.025;
 
     private _mesh: Mesh;
     public get mesh() { return this._mesh };
@@ -28,6 +31,8 @@ export class Map {
 
     private _markersGroup: Group = new Group();
     public get markersGroup() { return this._markersGroup };
+
+    private _selectedMarker: Object3D
 
     constructor(scene: Scene) {
         this._scene = scene;
@@ -94,8 +99,12 @@ export class Map {
         }
     }
 
-    public goToMarker = (normalizedPosition: Vector3): void => {
-        this.setMapZoom(normalizedPosition.x, normalizedPosition.y, this._zoomedScale);
+    public goToMarker = (markerObj: Object3D): void => {
+        this.setMapZoom(markerObj.userData.marker.data.mapNormalizedPosition.x,
+                        markerObj.userData.marker.data.mapNormalizedPosition.y,
+                        this.zoomedScale);
+
+        this._selectedMarker = markerObj;
     }
 
     public backFromMarker = (): void => {
@@ -106,55 +115,64 @@ export class Map {
         new Tween(this._material)
             .to({
                     map: {
-                        offset: { x: x - 0.5, y: y - 0.5 },
+                        offset: { x: x - 0.5, y: y - 0.5 + this.zoomCenterOffsetY},
                         repeat: { x: 1 / scale, y: 1 / scale }},
                     displacementScale: MathUtils.lerp(
                         0.45,
                         0.45 * scale / 3,
-                        (scale - 1) / (this._zoomedScale - 1)),
+                        (scale - 1) / (this.zoomedScale - 1)),
                     displacementBias: MathUtils.lerp(
                         -0.25,
                         -0.25 * scale / 3,
-                        (scale - 1) / (this._zoomedScale - 1))
+                        (scale - 1) / (this.zoomedScale - 1))
                 },
-                3000)
+                this.zoomDuration)
             .easing(TWEEN.Easing.Quadratic.InOut)
             .start()
             .onUpdate(() => {
                 this._material.map.offset.clampScalar(-this.getOffsetLimit(), this.getOffsetLimit())
-                this.zoomMarkers(this._material.map.repeat.x);
+                this.zoomMarkersAccordCurrentScale();
             });
     }
 
-    private zoomMarkers = (scale: number): void => {
-        this._markersGroup.scale.setScalar(this.getMapScale());
+    private zoomMarkersAccordCurrentScale = (): void => {
+        this._markersGroup.scale.setScalar(this.getCurrentScale());
 
         this._markersGroup.position.x =
-            -this._material.map.offset.x * this._geometry.parameters.width * this.getMapScale();
+            -this._material.map.offset.x * this._geometry.parameters.width * this.getCurrentScale();
         this._markersGroup.position.y =
-            -this._material.map.offset.y * this._geometry.parameters.height * this.getMapScale();
+            -this._material.map.offset.y * this._geometry.parameters.height * this.getCurrentScale();
 
         this._markersGroup.children.forEach((markerObj) => {
-            markerObj.scale.set(
-                1 / this.getMapScale(),
-                1 / this.getMapScale(),
-                1 / this.getMapScale() * Marker.multiplierScaleZ);
+            const unselectedMlt = markerObj != this._selectedMarker
+                ? Math.pow(1 - (this.getCurrentScale() - 1) / (this.zoomedScale - 1), 15)
+                : 1;
+
+            markerObj.scale.copy(new Vector3(
+                1 / this.getCurrentScale(),
+                1 / this.getCurrentScale(),
+                1 / this.getCurrentScale() * Marker.multiplierScaleZ)
+                .multiplyScalar(unselectedMlt)
+            );
             markerObj.position.setZ(
                 (markerObj.userData.marker.data.mapNormalizedPosition.z
                     * this._material.displacementScale
                     + this._material.displacementBias
                     + Marker.additionalOffsetZ)
-                * scale
+                * this.getCurrentInverseScale()
             )
         });
     }
 
+    private getCurrentInverseScale = (): number => {
+        return this._material.map.repeat.x;
+    }
 
-    private getMapScale = (): number => {
+    private getCurrentScale = (): number => {
         return 1 / this._material.map.repeat.x;
     }
 
     private getOffsetLimit = (): number => {
-        return (this.getMapScale() * 0.5 - 0.5) / this.getMapScale();
+        return (this.getCurrentScale() * 0.5 - 0.5) / this.getCurrentScale();
     }
 }

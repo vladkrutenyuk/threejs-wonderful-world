@@ -16,11 +16,17 @@ body {
     text-shadow: 1px 3px 0.4em black;
 
     user-select: none;
-    pointer-events: none;
+    /*pointer-events: none;*/
     z-index: 1;
 }
 
 .signText {
     font-size: 12px;
     font-weight: normal;
+}
+
+.myLink {
+    color: #ffffff;
+    font-size: 12px;
+    text-shadow: 1px 3px 0.4em black;
 }

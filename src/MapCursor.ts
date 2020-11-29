@@ -34,7 +34,6 @@ export class MapCursor {
 
     private _overedMarker: Object3D = null;
     private _lastOveredMarkerPosition: Vector3 = new Vector3();
-    private _selectedMarker: Object3D
 
     private _enterExitTweenGroup = new TWEEN.Group();
 
@@ -106,8 +105,6 @@ export class MapCursor {
         mapIntersection != null &&
         this._mapPosition.copy(mapIntersection.point);
 
-        // if (this._isBlocked) return;
-
         const markerIntersection = this._raycaster.intersectObjects(this._markersGroup.children)[0];
 
         if (markerIntersection == null){
@@ -123,26 +120,6 @@ export class MapCursor {
                 }
             }
         }
-    }
-
-    public setOveredMarkerSelection = async () => {
-        if (this._overedMarker == null) return;
-
-        const marker = <Marker>this._overedMarker.userData.marker;
-
-        if (marker.isSelected) {
-            console.log("unselect " + marker.data.title)
-            marker.beSelected(false);
-            this._map.backFromMarker();
-        } else {
-            console.log("select " + marker.data.title)
-            marker.beSelected(true);
-            this._map.goToMarker(<Vector3>marker.data.mapNormalizedPosition);
-        }
-
-        document.body.style.cursor = 'default';
-        this._isBlocked = true;
-        await setTimeout(() => {this._isBlocked = false}, 3000);
     }
 
     private setCursorPositionMagically = (): void => {
@@ -166,6 +143,29 @@ export class MapCursor {
         this._light.position.x = this._mapPosition.x;
         this._light.position.y = this._mapPosition.y;
     }
+
+    public setOveredMarkerSelection = async () => {
+        if (this._overedMarker == null) return;
+
+        const markerObj = this._overedMarker;
+        const marker = <Marker>markerObj.userData.marker;
+        this.onMarkerExit(markerObj);
+
+        if (marker.isSelected) {
+            console.log("Back from " + marker.data.title)
+            marker.beSelected(false);
+            this._map.backFromMarker();
+        } else {
+            console.log("Go to " + marker.data.title)
+            marker.beSelected(true);
+            this._map.goToMarker(markerObj);
+        }
+
+        document.body.style.cursor = 'default';
+        this._isBlocked = true;
+        await setTimeout(() => {this._isBlocked = false}, this._map.zoomDuration);
+    }
+
 
     private onMarkerEnter = (markerObject: Object3D): void => {
         if (this._isBlocked) return;
