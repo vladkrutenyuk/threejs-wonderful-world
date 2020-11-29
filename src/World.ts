@@ -1,4 +1,4 @@
-import {Camera, Color, Light, PerspectiveCamera, PointLight, Scene, WebGLRenderer} from "three";
+import {Color, Light, PerspectiveCamera, PointLight, Scene, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 export class World{

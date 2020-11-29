@@ -9,11 +9,10 @@ import {
     BufferGeometry,
     Float32BufferAttribute,
     PointsMaterial,
-    Points, Vector3, Object3D, PerspectiveCamera,
+    Points, Vector3, Object3D,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
-import {World} from "./World";
 
 export class Map {
     public readonly zoomedScale = 10;
