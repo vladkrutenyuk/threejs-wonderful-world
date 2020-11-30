@@ -43,6 +43,7 @@ export class MapCursor {
         value: 0,
         duration: 500
     };
+    private _mouseScreenPosition: Vector2 = new Vector2();
 
     private _isBlocked: boolean = false;
 
@@ -93,6 +94,7 @@ export class MapCursor {
     }
 
     public positioning = (mousePosition: Vector2) => {
+        this._mouseScreenPosition = mousePosition;
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -178,7 +180,7 @@ export class MapCursor {
         document.body.style.cursor = 'pointer';
 
         const marker = <Marker>markerObject.userData.marker;
-        marker.setMouseOveringStyle(true);
+        marker.setMouseOveringStyle(true, this._mouseScreenPosition);
 
         this._enterExitTweenGroup.removeAll();
         this._enterExitTweenGroup = new TWEEN.Group();
@@ -208,7 +210,7 @@ export class MapCursor {
         document.body.style.cursor = 'default';
 
         const marker = <Marker>markerObject.userData.marker;
-        marker.setMouseOveringStyle(false);
+        marker.setMouseOveringStyle(false, this._mouseScreenPosition);
 
         this._enterExitTweenGroup.removeAll();
 

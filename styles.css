@@ -28,6 +28,15 @@ body {
     font-size: 12px;
 }
 
+#hintMouseOver {
+    position: absolute;
+    font-family: monospace;
+    font-size: 12px;
+    text-shadow: 1px 3px 0.4em black;
+    color: #f2f2f2;
+    background-color: black;
+}
+
 .lowerSpace {
     padding: 7px;
     position: absolute;
@@ -46,7 +55,12 @@ body {
 }
 
 .myLink {
-    color: #ffffff;
+    color: #f2f2f2;
     font-size: 12px;
     text-shadow: 1px 3px 0.4em black;
+}
+
+.myLink:hover {
+    color: #ffffff;
+    text-shadow: 1px 1px 0.4em white;
 }

@@ -1,6 +1,6 @@
 import {
     Scene, BackSide, Group, Vector3,
-    Mesh, MeshBasicMaterial, OctahedronGeometry
+    Mesh, MeshBasicMaterial, OctahedronGeometry, Vector2
 } from "three";
 import TWEEN, { Tween } from "@tweenjs/tween.js";
 import { UIManager } from "./UIManager";
@@ -67,26 +67,34 @@ export class Marker {
         this._visualGroup.parent = this._colliderMesh;
     }
 
-    public setMouseOveringStyle = (isEntering: boolean): void => {
+    public setMouseOveringStyle = (isEntering: boolean, mouseScreenPosition: Vector2): void => {
         new Tween(this._visualGroup.scale)
             .to(new Vector3().setScalar(isEntering ? 1.3 : 1), 250)
-            .start()
-            .onComplete(() => {
-                UIManager.setTitle(isEntering || this._isSelected ? "Wonder of the world" : "Wonders of the world");
-                UIManager.setWonderNameTitle(isEntering || this._isSelected ? this.data.title : "");
-            });
+            .start();
+
+        if (isEntering) {
+            UIManager.setHint(
+                this._isSelected ? "< back" : "> " + this._data.title,
+                mouseScreenPosition.x,
+                mouseScreenPosition.y,
+                true)
+        } else {
+            UIManager.setHint("");
+        }
     }
 
     public beSelected = (isSelected: boolean): void => {
         new Tween(this._colliderMesh.rotation)
             .to({
-                z: isSelected ?  6 * -Math.PI / 2 : 0,
-                    y: isSelected ? -Math.PI / 2 : 0
-                },
+                    z: isSelected ? 6 * -Math.PI / 2 : 0,
+                    y: isSelected ? -Math.PI / 2 : 0 },
                 2000)
             .easing(TWEEN.Easing.Exponential.In)
             .start();
 
         this._isSelected = isSelected;
+
+        UIManager.setTitle(this._isSelected ? "Wonder of the world" : "Wonders of the world");
+        UIManager.setWonderNameTitle(this._isSelected ? this.data.title : "");
     }
 }
