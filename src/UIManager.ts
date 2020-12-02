@@ -49,7 +49,7 @@ export class UIManager {
                 UIManager.hintElement.textContent
                     = stringLerp.lerp(
                         fromText,
-                        stringLerp.lerp("q4we@%4rT32*yu%i!opa&s", text, Math.pow(tweener.value, 3)),
+                        stringLerp.lerp(UIManager.getRandomString(text.length * 1.5), text, Math.pow(tweener.value, 3)),
                         tweener.value);
             })
             .delay(isEnabling ? 600 : 0)
@@ -59,5 +59,15 @@ export class UIManager {
 
     public static update = (): void => {
         UIManager.hintTweenGroup.update();
+    }
+
+    public static getRandomString = (length): string => {
+        let result = '';
+        const characters = 'IJKLMNOPQRSTabcdefghijstuvwxyz0123456789!@#$%&';
+        const charactersLength = characters.length;
+        for (let i = 0; i < length; i++) {
+            result += characters.charAt(Math.floor(Math.random() * charactersLength));
+        }
+        return result;
     }
 }
