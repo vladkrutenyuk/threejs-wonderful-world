@@ -1,6 +1,6 @@
 import TWEEN, { Tween } from "@tweenjs/tween.js";
 import stringLerp from "string-lerp";
-import {Vector2} from "three";
+import {MathUtils} from "three";
 
 export class UIManager {
     private static wonderNameElement = document.getElementById("wonderName");
@@ -11,22 +11,33 @@ export class UIManager {
     public static setWonderNameTitle = (text: string): void => {
         const fromText: string = UIManager.wonderNameElement.textContent;
 
-        let tweener = { value: 0 };
+        let tweener = { textValue: 0};
 
         new Tween(tweener)
-            .to({ value: 1 }, 500)
+            .to({ textValue: 1 }, 1000)
             .onUpdate( () => {
-                UIManager.wonderNameElement.textContent = stringLerp
-                    .lerp(
+                UIManager.wonderNameElement.textContent = stringLerp.lerp(
                         fromText,
-                        stringLerp.lerp("q4we@%4rT32*yu%i!opa&s", text, Math.pow(tweener.value, 3)),
-                        tweener.value);
+                        stringLerp.lerp(
+                            UIManager.getRandomString(text.length * 1.5),
+                            text,
+                            Math.pow(tweener.textValue, 3)),
+                        tweener.textValue);
             })
             .start()
     }
 
-    public static setTitle = (text: string): void => {
+    public static setTitle = (text: string, shallMakeSmaller: boolean): void => {
         UIManager.titleElement.textContent = text;
+        // UIManager.titleElement.style.fontSize;
+
+        let tweener = { value: shallMakeSmaller ? 1 : 0};
+        new Tween(tweener)
+            .to({ value: shallMakeSmaller ? 0 : 1 }, 1000)
+            .start()
+            .onUpdate(() => {
+                UIManager.titleElement.style.fontSize = MathUtils.lerp(12, 17, tweener.value) + "px";
+            });
     }
 
     public static setHint = (text: string, x: number = 0, y: number = 0, isEnabling: boolean = false): void => {
@@ -49,7 +60,10 @@ export class UIManager {
                 UIManager.hintElement.textContent
                     = stringLerp.lerp(
                         fromText,
-                        stringLerp.lerp(UIManager.getRandomString(text.length * 1.5), text, Math.pow(tweener.value, 3)),
+                        stringLerp.lerp(
+                            UIManager.getRandomString(text.length * 1.5),
+                            text,
+                            Math.pow(tweener.value, 3)),
                         tweener.value);
             })
             .delay(isEnabling ? 600 : 0)

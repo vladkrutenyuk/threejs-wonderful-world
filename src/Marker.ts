@@ -94,7 +94,7 @@ export class Marker {
 
         this._isSelected = isSelected;
 
-        UIManager.setTitle(this._isSelected ? "Wonder of the world" : "Wonders of the world");
+        UIManager.setTitle(this._isSelected ? "Wonder of the world" : "Wonders of the world", this._isSelected);
         UIManager.setWonderNameTitle(this._isSelected ? this.data.title : "");
     }
 }
