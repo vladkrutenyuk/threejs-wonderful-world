@@ -200,8 +200,6 @@ export class MapCursor {
             0.065,
             4,
             this._magnetizationToMarker.duration / 2);
-
-        this._enterExitTweenGroup.update(this._magnetizationToMarker.duration);
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
@@ -229,8 +227,6 @@ export class MapCursor {
             0.0425,
             16,
             this._magnetizationToMarker.duration);
-
-        this._enterExitTweenGroup.update(this._magnetizationToMarker.duration);
     }
 
     private tweenRingGeometry = (innerRadius: number,

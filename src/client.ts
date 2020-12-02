@@ -2,6 +2,7 @@ import { Map } from "./Map";
 import { World } from "./World";
 import { MapCursor } from "./MapCursor";
 import { Input } from "./Input";
+import { UIManager } from "./UIManager";
 import TWEEN from "@tweenjs/tween.js";
 
 const jsonDataUrl: string = "data/markers.json";
@@ -22,6 +23,7 @@ const mainUpdate = (): void => {
     TWEEN.update();
     mapCursor.update();
     world.render();
+    UIManager.update();
 }
 
 mainUpdate();

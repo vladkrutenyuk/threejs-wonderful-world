@@ -6,7 +6,7 @@ export class UIManager {
     private static wonderNameElement = document.getElementById("wonderName");
     private static titleElement = document.getElementById("title");
     private static hintElement = document.getElementById("hintMouseOver");
-    private static hintLastPos: Vector2 = new Vector2();
+    public static hintTweenGroup = new TWEEN.Group();
 
     public static setWonderNameTitle = (text: string): void => {
         const fromText: string = UIManager.wonderNameElement.textContent;
@@ -29,30 +29,35 @@ export class UIManager {
         UIManager.titleElement.textContent = text;
     }
 
-    public static setHint = (text: string,
-                             x: number = UIManager.hintLastPos.x,
-                             y: number = UIManager.hintLastPos.y,
-                             enabled: boolean = false): void => {
-        UIManager.hintLastPos.set(x, y);
+    public static setHint = (text: string, x: number = 0, y: number = 0, isEnabling: boolean = false): void => {
         const fromText: string = UIManager.hintElement.textContent;
 
-        UIManager.hintElement.style.left = x + 30 + 'px';
-        UIManager.hintElement.style.top = y - 45 + 'px';
+        if (isEnabling) {
+            UIManager.hintElement.style.left = x + 30 + 'px';
+            UIManager.hintElement.style.top = y - 45 + 'px';
+        }
 
         let tweener = { value: 0 };
 
-        const duration = enabled ? 500 : 250;
+        UIManager.hintTweenGroup.removeAll();
+        UIManager.hintTweenGroup = new TWEEN.Group();
 
-        new Tween(tweener)
-            .to({ value: 1 }, duration)
+        new Tween(tweener, UIManager.hintTweenGroup)
+            .to({ value: 1 }, isEnabling ? 500 : 1)
             .onUpdate( () => {
-                UIManager.hintElement.textContent = stringLerp
-                    .lerp(
+                console.log("onUpdate");
+                UIManager.hintElement.textContent
+                    = stringLerp.lerp(
                         fromText,
                         stringLerp.lerp("q4we@%4rT32*yu%i!opa&s", text, Math.pow(tweener.value, 3)),
                         tweener.value);
             })
-            .delay(enabled ? 600 : 0)
+            .delay(isEnabling ? 600 : 0)
             .start()
+            .onStart(() => {console.log("onStart")});
+    }
+
+    public static update = (): void => {
+        UIManager.hintTweenGroup.update();
     }
 }
