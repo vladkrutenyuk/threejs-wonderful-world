@@ -8,7 +8,8 @@ export class UIManager {
     private static hintElement = document.getElementById("hintMouseOver");
     public static hintTweenGroup = new TWEEN.Group();
 
-    public static setWonderNameTitle = (text: string): void => {
+    public static setWonderNameTitle = (text: string, url: string): void => {
+        UIManager.wonderNameElement.setAttribute("onclick", "window.open('" + url + "')");
         const fromText: string = UIManager.wonderNameElement.textContent;
 
         let tweener = { textValue: 0};
@@ -29,7 +30,6 @@ export class UIManager {
 
     public static setTitle = (text: string, shallMakeSmaller: boolean): void => {
         UIManager.titleElement.textContent = text;
-        // UIManager.titleElement.style.fontSize;
 
         let tweener = { value: shallMakeSmaller ? 1 : 0};
         new Tween(tweener)

@@ -1,15 +1,8 @@
 import {
-    Mesh,
-    PlaneGeometry,
-    TextureLoader,
-    Scene,
-    MeshPhongMaterial,
-    Group,
-    MathUtils,
-    BufferGeometry,
-    Float32BufferAttribute,
-    PointsMaterial,
-    Points, Vector3, Object3D,
+    Mesh, PlaneGeometry, TextureLoader,
+    Scene, MeshPhongMaterial, Group,
+    MathUtils, BufferGeometry, Float32BufferAttribute,
+    PointsMaterial, Points, Vector3, Object3D,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";

@@ -11,7 +11,8 @@ export type MarkerData = {
         "x": number,
         "y": number,
         "z": number
-    }
+    },
+    "url": string
 }
 
 export class Marker {
@@ -95,6 +96,6 @@ export class Marker {
         this._isSelected = isSelected;
 
         UIManager.setTitle(this._isSelected ? "Wonder of the world" : "Wonders of the world", this._isSelected);
-        UIManager.setWonderNameTitle(this._isSelected ? this.data.title : "");
+        UIManager.setWonderNameTitle(this._isSelected ? this.data.title : "", this.data.url);
     }
 }
