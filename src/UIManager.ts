@@ -6,7 +6,7 @@ export class UIManager {
     private static wonderNameElement = document.getElementById("wonderName");
     private static titleElement = document.getElementById("title");
     private static hintElement = document.getElementById("hintMouseOver");
-    public static hintTweenGroup = new TWEEN.Group();
+    private static hintTweenGroup = new TWEEN.Group();
 
     public static setWonderNameTitle = (text: string, url: string): void => {
         UIManager.wonderNameElement.setAttribute("onclick", "window.open('" + url + "')");
@@ -43,9 +43,17 @@ export class UIManager {
     public static setHint = (text: string, x: number = 0, y: number = 0, isEnabling: boolean = false): void => {
         const fromText: string = UIManager.hintElement.textContent;
 
+        const offsetX = 30;
+        const marginX = 150;
+
+        const offsetY = -45;
+        const marginY = 30;
+
         if (isEnabling) {
-            UIManager.hintElement.style.left = x + 30 + 'px';
-            UIManager.hintElement.style.top = y - 45 + 'px';
+            UIManager.hintElement.style.left
+                = MathUtils.clamp(x + offsetX, marginX, window.innerWidth - marginX) + 'px';
+            UIManager.hintElement.style.top
+                = MathUtils.clamp(y + offsetY, marginY, window.innerHeight - marginY) + 'px';
         }
 
         let tweener = { value: 0 };
