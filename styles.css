@@ -1,11 +1,11 @@
 body {
     overflow: hidden;
     margin: 0;
+    font-family: "JetBrainsMono Regular";
 }
 
 #hintMouseOver {
     position: absolute;
-    font-family: monospace;
     font-size: 13px;
     text-shadow: 1px 3px 0.4em black;
     color: #f2f2f2;
@@ -18,7 +18,6 @@ body {
     width: 100%;
 
     color: #f2f2f2;
-    font-family: monospace;
     text-align: center;
     text-shadow: 1px 3px 0.4em black;
 
@@ -44,7 +43,6 @@ body {
     width: 100%;
 
     color: #f2f2f2;
-    font-family: monospace;
     font-size: 13px;
     text-align: center;
     text-shadow: 1px 3px 0.4em black;
@@ -64,4 +62,9 @@ body {
 .myLink:hover {
     color: white;
     text-shadow: 1px 1px 0.5em white;
+}
+
+@font-face {
+    font-family: "JetBrainsMono Regular";
+    src: url("assets/fonts/JetBrainsMono/JetBrainsMono-Regular.woff") format("woff");
 }

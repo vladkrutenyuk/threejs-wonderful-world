@@ -44,7 +44,7 @@ export class World{
         this._camera.position.set(0.01224, -0.70044, 1.07851);
         this._camera.rotation.set(0.57599, 0.00951,  -0.00618);
     }
-    
+
     public render = (): void => {
         this._renderer.render(this._scene, this._camera);
     }
