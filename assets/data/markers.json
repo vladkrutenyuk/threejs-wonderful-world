@@ -5,7 +5,8 @@
       "x": 0.536 ,
       "y": 0.729,
       "z": 0.51
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Colosseum"
   },
   {
     "title": "Great Wall of China",
@@ -13,7 +14,8 @@
       "x": 0.85,
       "y": 0.73,
       "z": 0.51
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China"
   },
   {
     "title": "Machu Picchu",
@@ -21,7 +23,8 @@
       "x": 0.3,
       "y": 0.43,
       "z": 0.51
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Machu_Picchu"
   },
   {
     "title": "Petra",
@@ -29,15 +32,17 @@
       "x": 0.6,
       "y": 0.66,
       "z": 0.54
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Petra"
   },
   {
-      "title": "Taj Mahal",
+    "title": "Taj Mahal",
     "mapNormalizedPosition": {
       "x": 0.7,
       "y": 0.65,
       "z": 0.51
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Taj_Mahal"
   },
   {
     "title": "Christ the Redeemer",
@@ -45,7 +50,8 @@
       "x": 0.38,
       "y": 0.37,
       "z": 0.51
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Christ_the_Redeemer_(statue)"
   },
   {
     "title": "Chichen Itza",
@@ -53,14 +59,16 @@
       "x": 0.26,
       "y": 0.62,
       "z": 0.5
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Chichen_Itza"
   },
   {
-    "title": "Giza pyramid complex",
+    "title": "Great Pyramid of Giza",
     "mapNormalizedPosition": {
       "x": 0.58,
       "y": 0.657,
       "z": 0.51
-    }
+    },
+    "url": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza"
   }
 ]

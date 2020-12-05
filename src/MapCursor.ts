@@ -4,10 +4,9 @@ import {
     RingGeometry, PlaneGeometry, BufferGeometry,
     Raycaster, Vector2, Vector3, MathUtils, Object3D, Color
 } from "three";
-import TWEEN from "@tweenjs/tween.js";
-
+import TWEEN, {Tween} from "@tweenjs/tween.js";
 import { Map } from "./Map";
-import {Marker, MarkerData} from "./Marker";
+import { Marker } from "./Marker";
 
 export class MapCursor {
     private _cursor: Group = new Group();
@@ -35,7 +34,8 @@ export class MapCursor {
 
     private _overedMarker: Object3D = null;
     private _lastOveredMarkerPosition: Vector3 = new Vector3();
-    private _selectedMarker: Object3D
+
+    private _enterExitTweenGroup = new TWEEN.Group();
 
     private _raycaster: Raycaster = new Raycaster();
     private _mapPosition: Vector3 = new Vector3();
@@ -43,6 +43,9 @@ export class MapCursor {
         value: 0,
         duration: 500
     };
+    private _mouseScreenPosition: Vector2 = new Vector2();
+
+    private _isBlocked: boolean = false;
 
     constructor(scene: Scene, camera: Camera, map: Map) {
         this._scene = scene;
@@ -86,12 +89,12 @@ export class MapCursor {
     }
 
     public update = (): void => {
-        TWEEN.update();
+        this._enterExitTweenGroup.update();
         this.setCursorPositionMagically();
     }
 
     public positioning = (mousePosition: Vector2) => {
-        if (this._selectedMarker != null) return;
+        this._mouseScreenPosition = mousePosition;
         const mouseCoords = {
             x: (mousePosition.x / window.innerWidth) * 2 - 1,
             y: -(mousePosition.y / window.innerHeight) * 2 + 1
@@ -121,27 +124,19 @@ export class MapCursor {
         }
     }
 
-    public selectMarker = (): void => {
-        if (this._overedMarker == null || this._selectedMarker != null) return;
-        document.body.style.cursor = 'default';
-        this._selectedMarker = this._overedMarker;
-
-        const markerData = <MarkerData>this._selectedMarker.userData.marker.data;
-        this._map.goToMarker(markerData.mapNormalizedPosition.x, markerData.mapNormalizedPosition.y);
-    }
-
-    public deselectMarker = (): void => {
-        if (this._selectedMarker == null) return;
-        this._selectedMarker = null;
-    }
-
     private setCursorPositionMagically = (): void => {
-        const position = new Vector3().lerpVectors(
-            this._mapPosition,
-            this._overedMarker != null ? this._overedMarker.position : this._lastOveredMarkerPosition,
-            this._magnetizationToMarker.value);
-        const alpha = 0.15;
+        let markerWorldPositionForLerp = new Vector3();
 
+        if (this._overedMarker != null) {
+            this._overedMarker.getWorldPosition(markerWorldPositionForLerp);
+        } else {
+            markerWorldPositionForLerp.copy(this._lastOveredMarkerPosition);
+        }
+
+        const position = new Vector3().lerpVectors(
+            this._mapPosition, markerWorldPositionForLerp, this._magnetizationToMarker.value);
+
+        const alpha = 0.15;
         this._cursor.position.lerpVectors(this._cursor.position, position, alpha);
 
         this._horizontalLine.position.y = MathUtils.lerp(this._horizontalLine.position.y, position.y, alpha);
@@ -151,21 +146,51 @@ export class MapCursor {
         this._light.position.y = this._mapPosition.y;
     }
 
+    public setOveredMarkerSelection = async () => {
+        if (this._overedMarker == null) return;
+
+        const markerObj = this._overedMarker;
+        const marker = <Marker>markerObj.userData.marker;
+        marker.visualGroup.scale.multiplyScalar(0.5);
+
+        if (marker.isSelected) {
+            marker.beSelected(false);
+            this._map.backFromMarker();
+
+            console.log("Back from " + marker.data.title)
+        } else {
+            marker.beSelected(true);
+            this._map.goToMarker(markerObj);
+
+            console.log("Go to " + marker.data.title)
+        }
+
+        this.onMarkerExit(markerObj);
+
+        document.body.style.cursor = 'default';
+        this._isBlocked = true;
+        await setTimeout(() => {this._isBlocked = false}, this._map.zoomDuration);
+    }
+
+
     private onMarkerEnter = (markerObject: Object3D): void => {
+        if (this._isBlocked) return;
+
         this._overedMarker = markerObject;
         document.body.style.cursor = 'pointer';
 
         const marker = <Marker>markerObject.userData.marker;
-        marker.setMouseEnterStyle();
+        marker.setMouseOveringStyle(true, this._mouseScreenPosition);
 
-        TWEEN.removeAll();
+        this._enterExitTweenGroup.removeAll();
+        this._enterExitTweenGroup = new TWEEN.Group();
 
-        new TWEEN.Tween(this._magnetizationToMarker)
+        new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
             .to({ value: 0.9 }, this._magnetizationToMarker.duration)
             .start();
 
         let tempColor = { hex: this._ringMaterial.color.getHex() };
-        new TWEEN.Tween(tempColor)
+        new Tween(tempColor, this._enterExitTweenGroup)
             .to({ hex: new Color(0x000000).getHex() }, this._magnetizationToMarker.duration / 2)
             .start()
             .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
@@ -178,21 +203,21 @@ export class MapCursor {
     }
 
     private onMarkerExit = (markerObject: Object3D): void => {
-        this._lastOveredMarkerPosition.copy(this._overedMarker.position);
+        this._overedMarker.getWorldPosition(this._lastOveredMarkerPosition);
         this._overedMarker = null;
         document.body.style.cursor = 'default';
 
         const marker = <Marker>markerObject.userData.marker;
-        marker.setMouseExitStyle();
+        marker.setMouseOveringStyle(false, this._mouseScreenPosition);
 
-        TWEEN.removeAll();
+        this._enterExitTweenGroup.removeAll();
 
-        new TWEEN.Tween(this._magnetizationToMarker)
+        new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
             .to({ value: 0 }, this._magnetizationToMarker.duration)
             .start();
 
         let tempColor = { hex: this._ringMaterial.color.getHex() };
-        new TWEEN.Tween(tempColor)
+        new Tween(tempColor, this._enterExitTweenGroup)
             .to({ hex: new Color(0xffffff).getHex() }, this._magnetizationToMarker.duration / 2)
             .start()
             .onUpdate(() => this._ringMaterial.color.setHex(tempColor.hex));
@@ -208,7 +233,7 @@ export class MapCursor {
                                  outerRadius: number,
                                  thetaSegments: number,
                                  duration: number): void => {
-        new TWEEN.Tween(this._ringData)
+        new Tween(this._ringData, this._enterExitTweenGroup)
             .to({ innerRadius, outerRadius, thetaSegments }, duration)
             .start()
             .onUpdate(() => {

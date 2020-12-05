@@ -4711,6 +4711,11 @@ stream-http@^2.7.2:
     to-arraybuffer "^1.0.0"
     xtend "^4.0.0"
 
+string-lerp@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/string-lerp/-/string-lerp-1.0.0.tgz#0e2236f559de761530b4f98cadc3ac240565a2b7"
+  integrity sha1-DiI29VnedhUwtPmMrcOsJAVlorc=
+
 string.prototype.trimend@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/string.prototype.trimend/-/string.prototype.trimend-1.0.2.tgz#6ddd9a8796bc714b489a3ae22246a208f37bfa46"

@@ -1,4 +1,4 @@
-import {Camera, Color, Light, PerspectiveCamera, PointLight, Scene, WebGLRenderer} from "three";
+import {Color, Light, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 export class World{
@@ -20,8 +20,6 @@ export class World{
         this._scene.background = new Color(0x101010);
 
         this._camera = new PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 150);
-        this._camera.position.set(0, 0.2, 2);
-        this._camera.lookAt(0, 0, 0);
 
         this._renderer = new WebGLRenderer({ antialias: true});
         this._renderer.setSize(window.innerWidth, window.innerHeight);
@@ -33,7 +31,7 @@ export class World{
         this._scene.add(this._light);
 
         this._controls = new OrbitControls(this._camera, this._renderer.domElement);
-        this._controls.maxDistance = 3;
+        this._controls.maxDistance = 1.5;
         this._controls.minDistance = 1;
         this._controls.minAzimuthAngle = -Math.PI / 4;
         this._controls.maxAzimuthAngle = Math.PI / 4;
@@ -42,9 +40,11 @@ export class World{
         this._controls.maxPolarAngle = Math.PI / 3 + Math.PI / 2;
 
         this._controls.enablePan = false;
+
+        this._camera.position.set(0.01224, -0.70044, 1.07851);
+        this._camera.rotation.set(0.57599, 0.00951,  -0.00618);
     }
 
-    /** Start inited scene rendering by inited camera */
     public render = (): void => {
         this._renderer.render(this._scene, this._camera);
     }

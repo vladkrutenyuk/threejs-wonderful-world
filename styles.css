@@ -1,26 +1,70 @@
 body {
     overflow: hidden;
     margin: 0;
+    font-family: "JetBrainsMono Regular";
+}
+
+#hintMouseOver {
+    position: absolute;
+    font-size: 13px;
+    text-shadow: 1px 3px 0.4em black;
+    color: #f2f2f2;
+    background-color: black;
 }
 
 .headerSpace {
-    margin-top: 20px;
     alignment: center;
     position: absolute;
     width: 100%;
 
     color: #f2f2f2;
-    font-family: monospace;
-    font-size: 17px;
     text-align: center;
     text-shadow: 1px 3px 0.4em black;
 
     user-select: none;
-    pointer-events: none;
     z-index: 1;
 }
 
-.signText {
-    font-size: 12px;
-    font-weight: normal;
+#title {
+    margin-top: 10px;
+    padding: 5px;
+    font-size: 17px;
+}
+
+#wonderName {
+    padding: 5px;
+    font-size: 17px;
+}
+
+.lowerSpace {
+    padding: 7px;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+
+    color: #f2f2f2;
+    font-size: 13px;
+    text-align: center;
+    text-shadow: 1px 3px 0.4em black;
+    background-color: black;
+
+    user-select: none;
+    z-index: 1;
+}
+
+.myLink {
+    color: #f2f2f2;
+    text-shadow: 1px 3px 0.4em black;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.myLink:hover {
+    color: white;
+    text-shadow: 1px 1px 0.5em white;
+}
+
+@font-face {
+    font-family: "JetBrainsMono Regular";
+    src: url("assets/fonts/JetBrainsMono/JetBrainsMono-Regular.woff") format("woff");
 }
