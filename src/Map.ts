@@ -2,7 +2,7 @@ import {
     Mesh, PlaneGeometry, TextureLoader,
     Scene, MeshPhongMaterial, Group,
     MathUtils, BufferGeometry, Float32BufferAttribute,
-    PointsMaterial, Points, Vector3, Object3D,
+    PointsMaterial, Points, Vector3, Object3D, UniformsUtils, ShaderLib,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
@@ -32,6 +32,13 @@ export class Map {
     }
 
     private init = (): void => {
+        // const customUniforms = UniformsUtils.merge([
+        //     ShaderLib.phong.uniforms,
+        //     { waterStep: { value: 0.3 } },
+        //     { time: { value: 0.0 } }
+        // ]);
+        // this._material = new MeshPhongMaterial(customUniforms);
+
         this._geometry = new PlaneGeometry(3.6, 1.8, 140, 70);
         this._material = new MeshPhongMaterial({
             map: new TextureLoader().load("img/world_color.jpg"),
@@ -43,6 +50,11 @@ export class Map {
             transparent: true,
             opacity: 0.6
         })
+        this._material.onBeforeCompile = shader => {
+            shader.vertexShader = shader.vertexShader
+                .replace('#include <displacementmap_vertex>', water_vertex)
+                .replace('#include <displacementmap_pars_vertex>', water_pars_vertex);
+        }
         this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);
         this._scene.add(this._mesh);
@@ -168,3 +180,18 @@ export class Map {
         return (this.getCurrentScale() * 0.5 - 0.5) / this.getCurrentScale();
     }
 }
+
+const water_pars_vertex: string = `
+uniform sampler2D displacementMap;
+uniform float displacementScale;
+uniform float displacementBias;
+uniform float waterStep;
+uniform float time;
+`;
+
+const water_vertex: string = `
+float normalizedHeight = texture2D(displacementMap, vUv).x;
+transformed += normalize(objectNormal) * (normalizedHeight * displacementScale + displacementBias);
+float waterMask = 1.0 - step(0.38, normalizedHeight);
+transformed -= normalize(objectNormal) * waterMask;
+`;
