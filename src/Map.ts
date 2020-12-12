@@ -53,9 +53,9 @@ export class Map {
             depthWrite: false
         })
         this._material.onBeforeCompile = shader => {
-            // shader.vertexShader = shader.vertexShader
-            //     .replace('#include <displacementmap_vertex>', water_vertex)
-            //     .replace('#include <displacementmap_pars_vertex>', water_pars_vertex);
+            shader.vertexShader = shader.vertexShader
+                .replace('#include <displacementmap_vertex>', water_vertex)
+                .replace('#include <displacementmap_pars_vertex>', water_pars_vertex);
         }
         this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);
