@@ -8,6 +8,7 @@ export class World{
     public get camera(): PerspectiveCamera { return this._camera };
 
     private _renderer: WebGLRenderer;
+    public get renderer(): WebGLRenderer { return this._renderer };
     private _light: Light;
     private _controls: OrbitControls;
 

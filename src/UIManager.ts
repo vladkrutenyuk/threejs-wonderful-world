@@ -64,7 +64,6 @@ export class UIManager {
         new Tween(tweener, UIManager.hintTweenGroup)
             .to({ value: 1 }, isEnabling ? 500 : 1)
             .onUpdate( () => {
-                console.log("onUpdate");
                 UIManager.hintElement.textContent
                     = stringLerp.lerp(
                         fromText,
@@ -75,8 +74,7 @@ export class UIManager {
                         tweener.value);
             })
             .delay(isEnabling ? 600 : 0)
-            .start()
-            .onStart(() => {console.log("onStart")});
+            .start();
     }
 
     public static update = (): void => {

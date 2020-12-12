@@ -1,9 +1,13 @@
 import {
     Scene, BackSide, Group, Vector3,
-    Mesh, MeshBasicMaterial, OctahedronGeometry, Vector2
+    Mesh, MeshBasicMaterial, OctahedronGeometry, Vector2, MeshPhongMaterial, Color, DoubleSide, FrontSide, Euler
 } from "three";
-import TWEEN, { Tween } from "@tweenjs/tween.js";
+
+import TWEEN, {Easing, Tween} from "@tweenjs/tween.js";
 import { UIManager } from "./UIManager";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
+import {TransformControls} from "three/examples/jsm/controls/TransformControls";
 
 export type MarkerData = {
     "title": string,
@@ -33,6 +37,10 @@ export class Marker {
 
     public get isSelected(): boolean { return this._isSelected };
     private _isSelected: boolean = false;
+
+    private _contentGroup: Group;
+    private _contentWireframe: Mesh;
+    private _contentOutline: Mesh;
 
     constructor(markerData: MarkerData) {
         this._data = markerData;
@@ -66,6 +74,64 @@ export class Marker {
         scene.add(this._wireframeMesh);
         this._visualGroup.add(this._coloredMesh, this._wireframeMesh);
         this._visualGroup.parent = this._colliderMesh;
+
+        // if (this.data.title == "Chichen Itza")
+        this.loadModel(scene);
+    }
+
+    private loadModel = (scene: Scene) => {
+        const loader = new GLTFLoader();
+        loader.load(
+            "models/ChichenItza.glb",
+            (gltf) => {
+                gltf.scene.traverse((child) => {
+                    if ((<Mesh>child).isMesh) {
+                        this._contentWireframe = (<Mesh>child);
+                        this._contentWireframe.material = new MeshBasicMaterial({
+                            depthWrite: false,
+                            wireframe: true,
+                            color: 0xffffff,
+                            side: FrontSide,
+                            transparent: true,
+                            opacity: 0
+                        });
+                        this._contentWireframe.renderOrder = 2;
+
+                        this._contentOutline = new Mesh(
+                            this._contentWireframe.geometry,
+                            new MeshBasicMaterial({
+                                    color: 0x000000,
+                                    opacity: 0,
+                                    side: BackSide,
+                                    depthWrite: false,
+                                    transparent: true,
+                            }));
+                        this._contentOutline.renderOrder = 1;
+                        this._contentOutline.scale.multiplyScalar(1.05);
+
+                        this._contentGroup = new Group();
+                        this._contentGroup.add(this._contentWireframe);
+                        this._contentGroup.add(this._contentOutline);
+
+                        this._contentGroup.scale.multiplyScalar(0.17);
+                        this._contentGroup.position.copy(this._colliderMesh.position);
+
+                        scene.add(this._contentGroup);
+
+                        this._contentGroup.scale.setScalar(0);
+                        this._contentGroup.visible = false;
+                    }
+                })
+            },
+            (xhr) => {
+                console.log(("Loading... "
+                    + (xhr.loaded / xhr.total * 100).toPrecision(3))
+                    + "% of " + this.data.title);
+            },
+            (error) => {
+                console.log(error);
+            }
+        );
     }
 
     public setMouseOveringStyle = (isEntering: boolean, mouseScreenPosition: Vector2): void => {
@@ -91,9 +157,63 @@ export class Marker {
                     y: isSelected ? -Math.PI / 2 : 0 },
                 2000)
             .easing(TWEEN.Easing.Exponential.In)
-            .start();
+            .start()
+            .onUpdate(() => {
+
+            });
 
         this._isSelected = isSelected;
+
+        if (this._isSelected) {
+            this._contentGroup.visible = this._isSelected;
+            new Tween(this._contentGroup)
+                .to({
+                        scale: new Vector3().setScalar(0.17),
+                        position: new Vector3(0, 0.25, 0)
+                    },
+                    1500)
+                .delay(1000)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start()
+
+            new Tween(<MeshBasicMaterial>this._contentWireframe.material)
+                .to( {opacity: 0.1}, 1000)
+                .delay(1500)
+                .start()
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onUpdate(() => console.log("forward"));
+
+            new Tween(<MeshBasicMaterial>this._contentOutline.material)
+                .to( {opacity: 0.9}, 1000)
+                .delay(1500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start()
+                .onUpdate(() => console.log("forward"));
+        } else {
+
+            new Tween(this._contentGroup)
+                .to({
+                        scale: new Vector3().setScalar(0),
+                        position: new Vector3().copy(this._colliderMesh.position)
+                    },
+                    1500)
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .start().onComplete(() =>
+                    this._contentGroup.visible = this._isSelected
+                )
+
+            new Tween(<MeshBasicMaterial>this._contentWireframe.material)
+                .to( {opacity: 0.0}, 1000)
+                .start()
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onUpdate(() => console.log("forward"));
+
+            new Tween(<MeshBasicMaterial>this._contentOutline.material)
+                .to( {opacity: 0.0}, 1000)
+                .start()
+                .easing(TWEEN.Easing.Quadratic.InOut)
+                .onUpdate(() => console.log("forward"));
+        }
 
         UIManager.setTitle(this._isSelected ? "Wonder of the world" : "Wonders of the world", this._isSelected);
         UIManager.setWonderNameTitle(this._isSelected ? this.data.title : "", this.data.url);

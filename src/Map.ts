@@ -39,21 +39,23 @@ export class Map {
         // ]);
         // this._material = new MeshPhongMaterial(customUniforms);
 
+        const textureLoader = new TextureLoader();
         this._geometry = new PlaneGeometry(3.6, 1.8, 140, 70);
         this._material = new MeshPhongMaterial({
-            map: new TextureLoader().load("img/world_color.jpg"),
-            specularMap: new TextureLoader().load("img/world_specular.jpg"),
-            displacementMap: new TextureLoader().load("img/world_height.jpg"),
+            map: textureLoader.load("img/world_color.jpg"),
+            specularMap: textureLoader.load("img/world_specular.jpg"),
+            displacementMap: textureLoader.load("img/world_height.jpg"),
             displacementBias: -0.25,
             displacementScale: 0.45,
             wireframe: true,
             transparent: true,
-            opacity: 0.6
+            opacity: 0.6,
+            depthWrite: false
         })
         this._material.onBeforeCompile = shader => {
-            shader.vertexShader = shader.vertexShader
-                .replace('#include <displacementmap_vertex>', water_vertex)
-                .replace('#include <displacementmap_pars_vertex>', water_pars_vertex);
+            // shader.vertexShader = shader.vertexShader
+            //     .replace('#include <displacementmap_vertex>', water_vertex)
+            //     .replace('#include <displacementmap_pars_vertex>', water_pars_vertex);
         }
         this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);
