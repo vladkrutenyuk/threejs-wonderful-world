@@ -32,13 +32,6 @@ export class Map {
     }
 
     private init = (): void => {
-        // const customUniforms = UniformsUtils.merge([
-        //     ShaderLib.phong.uniforms,
-        //     { waterStep: { value: 0.3 } },
-        //     { time: { value: 0.0 } }
-        // ]);
-        // this._material = new MeshPhongMaterial(customUniforms);
-
         const textureLoader = new TextureLoader();
         this._geometry = new PlaneGeometry(3.6, 1.8, 140, 70);
         this._material = new MeshPhongMaterial({
@@ -56,6 +49,8 @@ export class Map {
             shader.vertexShader = shader.vertexShader
                 .replace('#include <displacementmap_vertex>', water_vertex)
                 .replace('#include <displacementmap_pars_vertex>', water_pars_vertex);
+            shader.fragmentShader = shader.fragmentShader
+                .replace('#include <alphamap_fragment>', alpha_edges_frag);
         }
         this._material.map.center.set(0.5, 0.5);
         this._mesh = new Mesh(this._geometry, this._material);
@@ -188,12 +183,22 @@ uniform sampler2D displacementMap;
 uniform float displacementScale;
 uniform float displacementBias;
 uniform float waterStep;
-uniform float time;
 `;
 
 const water_vertex: string = `
 float normalizedHeight = texture2D(displacementMap, vUv).x;
-transformed += normalize(objectNormal) * (normalizedHeight * displacementScale + displacementBias);
+transformed.z += normalizedHeight * displacementScale + displacementBias;
 float waterMask = 1.0 - step(0.38, normalizedHeight);
-transformed -= normalize(objectNormal) * waterMask;
+transformed.z -= waterMask * 0.2;
+`;
+
+const alpha_edges_frag: string = `
+float margin = 0.05;
+float scaleX = 0.15;
+float scaleY = 0.15;
+float maskX = smoothstep(0.0 + margin, scaleX, vUv.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv.x));
+float maskY = smoothstep(0.0 + margin, scaleY, vUv.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv.y));
+float mask = maskX * maskY;
+
+diffuseColor.a *= mask;
 `;

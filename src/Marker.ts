@@ -74,8 +74,7 @@ export class Marker {
         scene.add(this._wireframeMesh);
         this._visualGroup.add(this._coloredMesh, this._wireframeMesh);
         this._visualGroup.parent = this._colliderMesh;
-
-        // if (this.data.title == "Chichen Itza")
+        
         this.loadModel(scene);
     }
 
@@ -180,15 +179,13 @@ export class Marker {
                 .to( {opacity: 0.1}, 1000)
                 .delay(1500)
                 .start()
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .onUpdate(() => console.log("forward"));
+                .easing(TWEEN.Easing.Quadratic.InOut);
 
             new Tween(<MeshBasicMaterial>this._contentOutline.material)
                 .to( {opacity: 0.9}, 1000)
                 .delay(1500)
                 .easing(TWEEN.Easing.Quadratic.InOut)
-                .start()
-                .onUpdate(() => console.log("forward"));
+                .start();
         } else {
 
             new Tween(this._contentGroup)
@@ -205,14 +202,12 @@ export class Marker {
             new Tween(<MeshBasicMaterial>this._contentWireframe.material)
                 .to( {opacity: 0.0}, 1000)
                 .start()
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .onUpdate(() => console.log("forward"));
+                .easing(TWEEN.Easing.Quadratic.InOut);
 
             new Tween(<MeshBasicMaterial>this._contentOutline.material)
                 .to( {opacity: 0.0}, 1000)
                 .start()
-                .easing(TWEEN.Easing.Quadratic.InOut)
-                .onUpdate(() => console.log("forward"));
+                .easing(TWEEN.Easing.Quadratic.InOut);
         }
 
         UIManager.setTitle(this._isSelected ? "Wonder of the world" : "Wonders of the world", this._isSelected);
