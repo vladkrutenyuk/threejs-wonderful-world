@@ -1,14 +1,12 @@
 import {
-    Scene, BackSide, Group, Vector3,
-    Mesh, MeshBasicMaterial, OctahedronGeometry, Vector2, MeshPhongMaterial, Color, DoubleSide, FrontSide, Euler
+    Scene, BackSide, FrontSide, Group,
+    Mesh, MeshBasicMaterial, OctahedronGeometry,
+    Vector2, Vector3
 } from "three";
 
-import TWEEN, {Easing, Tween} from "@tweenjs/tween.js";
+import TWEEN, { Tween } from "@tweenjs/tween.js";
 import { UIManager } from "./UIManager";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
-import {DRACOLoader} from "three/examples/jsm/loaders/DRACOLoader";
-import {TransformControls} from "three/examples/jsm/controls/TransformControls";
-
 export type MarkerData = {
     "title": string,
     "mapNormalizedPosition": {
