@@ -1,4 +1,7 @@
-import {Color, Light, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer} from "three";
+import {
+    Color, Light, PerspectiveCamera, PointLight,
+    Scene, WebGLRenderer, LinearToneMapping
+} from "three";
 import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 export class World{
@@ -24,6 +27,7 @@ export class World{
 
         this._renderer = new WebGLRenderer({ antialias: true});
         this._renderer.setSize(window.innerWidth, window.innerHeight);
+        this._renderer.toneMapping = LinearToneMapping;
         document.body.appendChild(this._renderer.domElement)
         window.addEventListener('resize', this.onWindowResize, false)
 

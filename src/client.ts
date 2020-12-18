@@ -20,10 +20,13 @@ input.setMouseClickEventListener(mapCursor.setOveredMarkerSelection);
 
 const mainUpdate = (): void => {
     requestAnimationFrame(mainUpdate);
+
     TWEEN.update();
     mapCursor.update();
-    world.render();
     UIManager.update();
+    map.animateWater();
+
+    world.render();
 }
 
 mainUpdate();

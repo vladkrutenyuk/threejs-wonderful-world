@@ -2,80 +2,10 @@ import {
     Mesh, PlaneGeometry, TextureLoader,
     Scene, MeshPhongMaterial, Group, MathUtils,
     BufferGeometry, Float32BufferAttribute, PointsMaterial,
-    Points, Vector3, Object3D,
+    Points, Vector3, Object3D, Clock,
 } from "three";
 import { Marker, MarkerData } from "./Marker";
 import TWEEN, {Tween} from "@tweenjs/tween.js";
-
-const noise: string = `
-float random (in vec2 st) 
-{
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))
-                 * 43758.5453123);
-}
-
-float noise (in vec2 st) 
-{
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f*f*(3.0-2.0*f);
-
-    return mix(a, b, u.x) +
-        (c - a)* u.y * (1.0 - u.x) +
-        (d - b) * u.x * u.y;
-}
-`;
-
-const pars_vertex: string = `
-uniform float time;
-varying vec2 vUv3;
-`;
-
-const vertex: string = `
-// ---------- BEGIN ------------ 
-
-vec3 transformed = vec3(position);
-vUv3 = uv;
-
-// ---------- WATER ------------ 
-
-float normalizedHeight = texture2D(displacementMap, vUv).x;
-float waterMask = 1.0 - step(0.38, normalizedHeight);
-transformed.z -= waterMask * noise(vUv * 5.0);
-
-// ---------- EDGES ------------ 
-
-float margin = 0.0;
-float scaleX = 0.2;
-float scaleY = 0.2;
-float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
-float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
-float mask = 1.0 - maskX * maskY;
-
-transformed.z -= mask * 0.2;
-`;
-
-const pars_frag: string = `
-varying vec2 vUv3;
-`;
-
-const alpha_edges_frag: string = `
-float margin = 0.05;
-float scaleX = 0.25;
-float scaleY = 0.25;
-float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
-float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
-float mask = maskX * maskY;
-
-diffuseColor.a *= mask;
-`;
 
 export class Map {
     public readonly zoomedScale = 10;
@@ -95,6 +25,10 @@ export class Map {
     public get markersGroup() { return this._markersGroup };
 
     private _selectedMarker: Object3D
+    private _clock: Clock;
+    private _time = {
+        value: 0.0
+    }
 
     constructor(scene: Scene) {
         this._scene = scene;
@@ -102,6 +36,7 @@ export class Map {
     }
 
     private init = (): void => {
+        this._clock = new Clock();
         const textureLoader = new TextureLoader();
         this._geometry = new PlaneGeometry(3.6, 1.8, 140, 70);
         this._material = new MeshPhongMaterial({
@@ -117,7 +52,7 @@ export class Map {
         })
 
         this._material.onBeforeCompile = shader => {
-            shader.uniforms.time = { value: 0.15 };
+            shader.uniforms.time = this._time;
 
             shader.vertexShader = noise + pars_vertex + shader.vertexShader
                 .replace('#include <begin_vertex>', vertex);
@@ -151,6 +86,10 @@ export class Map {
         geometry.setAttribute('position', new Float32BufferAttribute(vertices, 3));
         const material = new PointsMaterial( { color: 0x505050, size: 0.08 } );
         this._scene.add(new Points(geometry, material));
+    }
+
+    public animateWater = (): void => {
+        this._time.value = this._clock.getElapsedTime();
     }
 
     public initMarkers = async (jsonDataUrl: string): Promise<void> => {
@@ -252,3 +191,83 @@ export class Map {
         return (this.getCurrentScale() * 0.5 - 0.5) / this.getCurrentScale();
     }
 }
+
+const noise: string = `
+float random (in vec2 st) 
+{
+    return fract(sin(dot(st.xy,
+                         vec2(12.9898,78.233)))
+                 * 43758.5453123);
+}
+
+float noise (in vec2 st) 
+{
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+
+    vec2 u = f*f*(3.0-2.0*f);
+
+    return mix(a, b, u.x) +
+        (c - a)* u.y * (1.0 - u.x) +
+        (d - b) * u.x * u.y;
+}
+`;
+
+const pars_vertex: string = `
+uniform float time;
+varying vec2 vUv3;
+`;
+
+const vertex: string = `
+// ---------- BEGIN ------------ 
+
+vec3 transformed = vec3(position);
+vUv3 = uv;
+
+// ---------- WATER ------------ 
+float scale = 10.0;
+float timeScale = 0.4;
+float strength = 0.2;
+
+float normalizedHeight = texture2D(displacementMap, vUv).x;
+float waterMask = 1.0 - step(0.37, normalizedHeight);
+
+float noise1 = noise(vUv3 * vec2(noise(vUv), 1) * vec2(5.0 * scale, scale) + vec2(-time, time) * timeScale);
+float noise2 = noise(vUv3 * vec2(1, noise(vUv3)) * vec2(scale, scale * 6.0) + vec2(time, -time) * timeScale);
+float noise3 = noise(vUv * vec2(noise(vUv)) * vec2(3.0 * scale) + vec2(time, -time) * timeScale);
+float noise4 = noise(vUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
+
+float noiseResult = (noise1 + noise2 + noise3 + noise4) / 4.0;
+transformed.z -= waterMask * noiseResult * strength;
+
+// ---------- EDGES ------------ 
+
+float margin = 0.0;
+float scaleX = 0.2;
+float scaleY = 0.2;
+float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
+float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
+float mask = 1.0 - maskX * maskY;
+
+transformed.z -= mask * 0.2;
+`;
+
+const pars_frag: string = `
+varying vec2 vUv3;
+`;
+
+const alpha_edges_frag: string = `
+float margin = 0.05;
+float scaleX = 0.25;
+float scaleY = 0.25;
+float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
+float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
+float mask = maskX * maskY;
+
+diffuseColor.a *= mask;
+`;
