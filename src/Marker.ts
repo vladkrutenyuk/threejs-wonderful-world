@@ -16,7 +16,8 @@ export type MarkerData = {
         "y": number,
         "z": number
     },
-    "url": string
+    "url": string,
+    "contentUrl": string
 }
 
 export class Marker {
@@ -103,7 +104,6 @@ export class Marker {
         this._visualGroup.add(this._shapeMesh, this._wireframeMesh);
         this._visualGroup.parent = this._markerMesh;
 
-        // this._data.title == "Chichen Itza" &&
         this.loadModel(scene);
     }
 
@@ -119,7 +119,7 @@ export class Marker {
 
         const loader = new GLTFLoader();
         
-        loader.load("models/ChichenItza.glb",
+        loader.load(this._data.contentUrl,
             (gltf) => {
                 gltf.scene.traverse((child) => {
                     if ((<Mesh>child).isMesh) {
@@ -183,6 +183,7 @@ export class Marker {
     }
 
     private showHideContent = (): void => {
+        if (this._contentMesh == null) return;
 
         if (this._isSelected) {
             this._uniforms.fadeLevel.value = this._uniformsValues.fadeLevel;

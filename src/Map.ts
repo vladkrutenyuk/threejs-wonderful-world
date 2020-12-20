@@ -9,7 +9,7 @@ import TWEEN, {Tween} from "@tweenjs/tween.js";
 
 export class Map {
     public readonly zoomScale = 10;
-    public static readonly zoomBackDelay = 450;
+    public static readonly zoomBackDelay = 550;
     public static readonly zoomDuration = 2500;
     private readonly zoomCenterOffsetY = 0.025;
 

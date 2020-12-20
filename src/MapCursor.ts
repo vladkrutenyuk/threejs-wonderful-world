@@ -169,7 +169,7 @@ export class MapCursor {
 
         document.body.style.cursor = 'default';
         this._isBlocked = true;
-        await setTimeout(() => {this._isBlocked = false}, this._map.zoomDuration);
+        await setTimeout(() => {this._isBlocked = false}, Map.zoomDuration);
     }
 
 
