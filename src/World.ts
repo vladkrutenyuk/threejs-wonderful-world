@@ -1,5 +1,9 @@
-import {Color, Light, PerspectiveCamera, PointLight, Scene, Vector3, WebGLRenderer} from "three";
-import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
+import {
+    Color, Light, PerspectiveCamera, PointLight,
+    Scene, WebGLRenderer, LinearToneMapping
+} from "three";
+
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls";
 
 export class World{
     private _scene: Scene;
@@ -16,6 +20,7 @@ export class World{
     }
 
     private init = (): void => {
+        
         this._scene = new Scene();
         this._scene.background = new Color(0x101010);
 
@@ -29,6 +34,8 @@ export class World{
         this._light = new PointLight(0xffffff, 1.5);
         this._light.position.set(0, 5, 10);
         this._scene.add(this._light);
+
+        this._renderer.toneMapping = LinearToneMapping;
 
         this._controls = new OrbitControls(this._camera, this._renderer.domElement);
         this._controls.maxDistance = 1.5;
@@ -44,12 +51,14 @@ export class World{
         this._camera.position.set(0.01224, -0.70044, 1.07851);
         this._camera.rotation.set(0.57599, 0.00951,  -0.00618);
     }
-
+    
     public render = (): void => {
+
         this._renderer.render(this._scene, this._camera);
     }
 
     private onWindowResize = (): void => {
+
         this._camera.aspect = window.innerWidth / window.innerHeight;
         this._camera.updateProjectionMatrix();
         this._renderer.setSize(window.innerWidth, window.innerHeight);
