@@ -61,14 +61,5 @@
       "z": 0.5
     },
     "url": "https://en.wikipedia.org/wiki/Chichen_Itza"
-  },
-  {
-    "title": "Great Pyramid of Giza",
-    "mapNormalizedPosition": {
-      "x": 0.58,
-      "y": 0.657,
-      "z": 0.51
-    },
-    "url": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza"
   }
 ]
