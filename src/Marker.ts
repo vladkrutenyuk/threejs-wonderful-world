@@ -1,8 +1,8 @@
 import {
     Scene, BackSide, Group,
     Mesh, MeshBasicMaterial, OctahedronGeometry,
-    Vector2, Vector3, MeshMatcapMaterial, 
-    TextureLoader, ShaderMaterial, Texture, Color
+    Vector2, Vector3, RingGeometry, 
+    TextureLoader, ShaderMaterial, Color
 } from "three";
 import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
 import { UIManager } from "./UIManager";
@@ -23,6 +23,7 @@ export type MarkerData = {
 export class Marker {
     public static readonly additionalOffsetZ = 0.07;
     public static readonly multiplierScaleZ = 1.5;
+    public static readonly octahedronRadius = 0.025;
 
     public get data(): MarkerData { return this._data };
     private _data: MarkerData;
@@ -31,6 +32,7 @@ export class Marker {
     private readonly _markerMesh: Mesh;
     private readonly _wireframeMesh: Mesh;
     private readonly _shapeMesh: Mesh;
+    private readonly _ringMesh: Mesh;
 
     public get visualGroup(): Group { return this._visualGroup }
     private _visualGroup: Group = new Group();
@@ -68,20 +70,27 @@ export class Marker {
 
         this._data = markerData;
 
+        const thickness = 0.0035;
+        const radius = 0.01;
+        this._ringMesh = new Mesh(
+            new RingGeometry(radius, radius + thickness, 16),
+            new MeshBasicMaterial({ color: 0xffffff })
+        );
+
         this._markerMesh = new Mesh(
-            new OctahedronGeometry(0.075),
+            new OctahedronGeometry(0.05 + Marker.octahedronRadius),
             new MeshBasicMaterial({ visible: false })
         );
         this._markerMesh.scale.setComponent(2, Marker.multiplierScaleZ);
         this._markerMesh.userData.marker = this;
 
         this._wireframeMesh = new Mesh(
-            new OctahedronGeometry(0.025),
+            new OctahedronGeometry(Marker.octahedronRadius),
             new MeshBasicMaterial( { wireframe: true } )
         );
 
         this._shapeMesh = new Mesh(
-            new OctahedronGeometry(0.035),
+            new OctahedronGeometry(0.01 + Marker.octahedronRadius),
             new MeshBasicMaterial( { wireframe: false, color: 0x000000, side: BackSide } )
         );
     }
@@ -100,8 +109,10 @@ export class Marker {
         scene.add(this._markerMesh);
         scene.add(this._visualGroup);
         scene.add(this._wireframeMesh);
+        scene.add(this._ringMesh);
+        this._ringMesh.position.setZ(-Marker.octahedronRadius - 0.01); 
 
-        this._visualGroup.add(this._shapeMesh, this._wireframeMesh);
+        this._visualGroup.add(this._shapeMesh, this._wireframeMesh, this._ringMesh);
         this._visualGroup.parent = this._markerMesh;
 
         this.loadModel(scene);
