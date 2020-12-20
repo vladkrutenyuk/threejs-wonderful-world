@@ -38,7 +38,7 @@ export class Map {
     private init = (): void => {
         this._clock = new Clock();
         const textureLoader = new TextureLoader();
-        this._geometry = new PlaneGeometry(3.6, 1.8, 140, 70);
+        this._geometry = new PlaneGeometry(3.6, 1.8, 140 * 1.3, 70 * 1.3);
         this._material = new MeshPhongMaterial({
             map: textureLoader.load("img/world_color.jpg"),
             specularMap: textureLoader.load("img/world_specular.jpg"),
@@ -48,7 +48,7 @@ export class Map {
             wireframe: true,
             transparent: true,
             opacity: 0.6,
-            depthWrite: false
+            depthWrite: true
         })
 
         this._material.onBeforeCompile = shader => {
@@ -192,82 +192,83 @@ export class Map {
     }
 }
 
-const noise: string = `
-float random (in vec2 st) 
-{
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))
-                 * 43758.5453123);
-}
+const glsl = x => x;
 
-float noise (in vec2 st) 
-{
-    vec2 i = floor(st);
-    vec2 f = fract(st);
+const noise: string = glsl`
+    float random (in vec2 st) 
+    {
+        return fract(sin(dot(st.xy,
+                            vec2(12.9898,78.233)))
+                    * 43758.5453123);
+    }
 
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
+    float noise (in vec2 st) 
+    {
+        vec2 i = floor(st);
+        vec2 f = fract(st);
 
-    vec2 u = f*f*(3.0-2.0*f);
+        float a = random(i);
+        float b = random(i + vec2(1.0, 0.0));
+        float c = random(i + vec2(0.0, 1.0));
+        float d = random(i + vec2(1.0, 1.0));
 
-    return mix(a, b, u.x) +
-        (c - a)* u.y * (1.0 - u.x) +
-        (d - b) * u.x * u.y;
-}
+        vec2 u = f*f*(3.0-2.0*f);
+
+        return mix(a, b, u.x) +
+            (c - a)* u.y * (1.0 - u.x) +
+            (d - b) * u.x * u.y;
+    }
 `;
 
-const pars_vertex: string = `
-uniform float time;
-varying vec2 vUv3;
+const pars_vertex: string = glsl`
+    uniform float time;
+    varying vec2 vUv3;
 `;
 
-const vertex: string = `
-// ---------- BEGIN ------------ 
+const vertex: string = glsl`
+    // Begin
+    vec3 transformed = vec3(position);
+    vUv3 = uv;
 
-vec3 transformed = vec3(position);
-vUv3 = uv;
+    // Water
+    float scale = 10.0;
+    float timeScale = 0.4;
+    float strength = 0.2;
 
-// ---------- WATER ------------ 
-float scale = 10.0;
-float timeScale = 0.4;
-float strength = 0.2;
+    float normalizedHeight = texture2D(displacementMap, vUv).x;
+    float waterMask = 1.0 - step(0.37, normalizedHeight);
 
-float normalizedHeight = texture2D(displacementMap, vUv).x;
-float waterMask = 1.0 - step(0.37, normalizedHeight);
+    float noise1 = noise(vUv3 * vec2(noise(vUv), 1) * vec2(5.0 * scale, scale) + vec2(-time, time) * timeScale);
+    float noise2 = noise(vUv3 * vec2(1, noise(vUv3)) * vec2(scale, scale * 6.0) + vec2(time, -time) * timeScale);
+    float noise3 = noise(vUv * vec2(noise(vUv)) * vec2(3.0 * scale) + vec2(time, -time) * timeScale);
+    float noise4 = noise(vUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
 
-float noise1 = noise(vUv3 * vec2(noise(vUv), 1) * vec2(5.0 * scale, scale) + vec2(-time, time) * timeScale);
-float noise2 = noise(vUv3 * vec2(1, noise(vUv3)) * vec2(scale, scale * 6.0) + vec2(time, -time) * timeScale);
-float noise3 = noise(vUv * vec2(noise(vUv)) * vec2(3.0 * scale) + vec2(time, -time) * timeScale);
-float noise4 = noise(vUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
+    float noiseResult = (noise1 + noise2 + noise3 + noise4) / 4.0;
+    transformed.z -= waterMask * noiseResult * strength;
 
-float noiseResult = (noise1 + noise2 + noise3 + noise4) / 4.0;
-transformed.z -= waterMask * noiseResult * strength;
+    //  Edges
+    float margin = 0.0;
+    float scaleX = 0.2;
+    float scaleY = 0.2;
+    float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
+    float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
+    float mask = 1.0 - maskX * maskY;
 
-// ---------- EDGES ------------ 
-
-float margin = 0.0;
-float scaleX = 0.2;
-float scaleY = 0.2;
-float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
-float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
-float mask = 1.0 - maskX * maskY;
-
-transformed.z -= mask * 0.2;
+    transformed.z -= mask * 0.2;
 `;
 
-const pars_frag: string = `
-varying vec2 vUv3;
+const pars_frag: string = glsl`
+    varying vec2 vUv3;
 `;
 
-const alpha_edges_frag: string = `
-float margin = 0.05;
-float scaleX = 0.25;
-float scaleY = 0.25;
-float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
-float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
-float mask = maskX * maskY;
+const alpha_edges_frag: string = glsl`
+    float margin = 0.05;
+    float scaleX = 0.25;
+    float scaleY = 0.25;
 
-diffuseColor.a *= mask;
+    float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
+    float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
+    float mask = maskX * maskY;
+
+    diffuseColor.a *= mask;
 `;
