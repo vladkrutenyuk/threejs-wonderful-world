@@ -244,7 +244,7 @@ const vertex: string = glsl`
     float noise4 = noise(vUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
 
     float noiseResult = (noise1 + noise2 + noise3 + noise4) / 4.0;
-    transformed.z -= waterMask * noiseResult * strength;
+    transformed.z -= waterMask * (noiseResult * strength - 0.07);
 
     //  Edges
     float margin = 0.0;
