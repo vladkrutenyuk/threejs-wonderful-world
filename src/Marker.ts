@@ -9,6 +9,7 @@ import { UIManager } from "./UIManager";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Map } from "./Map";
 import { GUI } from "three/examples/jsm/libs/dat.gui.module"
+import { MathUtils } from 'three';
 
 export type MarkerData = {
     "title": string,
@@ -33,7 +34,7 @@ export class Marker {
     public get markerMesh(): Mesh { return this._markerMesh };
     private readonly _markerMesh: Mesh;
     private readonly _wireframeMesh: Mesh;
-    private readonly _shapeMesh: Mesh;
+    private readonly _shapeMesh: Mesh; 
     private readonly _ringMesh: Mesh;
 
     public get visualGroup(): Group { return this._visualGroup }
@@ -190,24 +191,62 @@ export class Marker {
     private showHideContent = (): void => {
         if (this._contentMesh == null) return;
 
+        let duration = this._isSelected ? 2500 : 600;
+
         if (this._isSelected) {
+            
             this._uniforms.transition.value = 0;
 
             new Tween(this._uniforms)
-                .to({ transition: { value: 1 } }, 2500)
+                .to({ transition: { value: 1 } }, duration)
                 .delay(Map.zoomDuration)
                 .start()
                 .easing(Easing.Quadratic.In)
-                .onStart(() => this._contentMesh.visible = this._isSelected);
-
+                .onStart(() => {
+                    this._contentMesh.visible = this._isSelected;
+                    this.blinkShape(duration);
+                    this.pulseWireframe(duration);
+                });
         } else {
+
             new Tween(this._uniforms)
-                .to({ transition: { value: 0 } }, 600)
+                .to({ transition: { value: 0 } }, duration)
                 .start()
                 .easing(Easing.Quadratic.In)
-                .onComplete(() => this._contentMesh.visible = this._isSelected );
+                .onStart(() => { 
+                    this.blinkShape(duration);
+                    this.pulseWireframe(duration);
+                })
+                .onComplete(() => { this._contentMesh.visible = this._isSelected });   
+        } 
+    }
 
-        }
+    private blinkShape = (duration: number): void => {
+        const shapeMaterial = (<MeshBasicMaterial>this._shapeMesh.material);
+        const tempColor = { hex: shapeMaterial.color.getHex() };
+
+        const goTo = new Tween(tempColor)
+            .to({ hex: new Color(0xffffff).getHex() }, duration / 2)
+            .start()
+            .onUpdate(() => { shapeMaterial.color.setHex(tempColor.hex); });
+
+        const goBack = new Tween(tempColor)
+            .to({ hex: new Color(0x000000).getHex() }, duration / 2)
+            .onUpdate(() => { shapeMaterial.color.setHex(tempColor.hex); });
+
+        goTo.start().onComplete(() => goBack.start());
+    }
+
+    private pulseWireframe = (duration: number) => {
+        const first = new Tween(this._wireframeMesh)
+            .to({ scale: new Vector3().setScalar(0.5) }, duration * 0.8)
+            .easing(Easing.Quartic.Out);
+        
+        const second = new Tween(this._wireframeMesh)
+            .to({ scale: new Vector3().setScalar(1) }, duration * 0.2)
+            .easing(Easing.Quartic.Out);
+
+        first.start().onComplete(() => second.start());
     }
 }
 
