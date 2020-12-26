@@ -7,7 +7,8 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Colosseum",
-    "contentUrl": ""
+    "contentUrl": "models/Colosseum.glb",
+    "contentScale": 0.2
   },
   {
     "title": "Great Wall of China",
@@ -17,7 +18,8 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
-    "contentUrl": ""
+    "contentUrl": "models/GreatWallOfChina.glb",
+    "contentScale": 0.4
   },
   {
     "title": "Machu Picchu",
@@ -27,7 +29,8 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Machu_Picchu",
-    "contentUrl": ""
+    "contentUrl": "models/MachuPicchu.glb",
+    "contentScale": 0.25
   },
   {
     "title": "Petra",
@@ -37,7 +40,8 @@
       "z": 0.54
     },
     "url": "https://en.wikipedia.org/wiki/Petra",
-    "contentUrl": ""
+    "contentUrl": "models/PetraJordan.glb",
+    "contentScale": 0.5
   },
   {
     "title": "Taj Mahal",
@@ -47,7 +51,8 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Taj_Mahal",
-    "contentUrl": ""
+    "contentUrl": "models/TajMahal.glb",
+    "contentScale": 0.35
   },
   {
     "title": "Christ the Redeemer",
@@ -57,7 +62,8 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Christ_the_Redeemer_(statue)",
-    "contentUrl": ""
+    "contentUrl": "models/ChristTheRedeemer.glb",
+    "contentScale": 0.5
   },
   {
     "title": "Chichen Itza",
@@ -67,6 +73,7 @@
       "z": 0.5
     },
     "url": "https://en.wikipedia.org/wiki/Chichen_Itza",
-    "contentUrl": "models/ChichenItza.glb"
+    "contentUrl": "models/ChichenItza.glb",
+    "contentScale": 0.25
   }
 ]

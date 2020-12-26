@@ -52,7 +52,7 @@ export class Map {
             depthWrite: true
         })
 
-        this._material.onBeforeCompile = shader => {
+        this._material.onBeforeCompile = (shader): void => {
             shader.uniforms.time = this._time;
 
             shader.vertexShader = noise + pars_vertex + shader.vertexShader

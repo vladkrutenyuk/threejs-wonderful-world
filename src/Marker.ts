@@ -8,6 +8,7 @@ import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
 import { UIManager } from "./UIManager";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Map } from "./Map";
+import { GUI } from "three/examples/jsm/libs/dat.gui.module"
 
 export type MarkerData = {
     "title": string,
@@ -17,7 +18,8 @@ export type MarkerData = {
         "z": number
     },
     "url": string,
-    "contentUrl": string
+    "contentUrl": string,
+    "contentScale": number
 }
 
 export class Marker {
@@ -42,28 +44,14 @@ export class Marker {
 
     private _contentMesh: Mesh;
     private _contentMaterial: ShaderMaterial;
-    private _uniformsValues = {
-        matcap: new TextureLoader().load("img/matcap_1.png"),
-        gridColor: new Color(0xffffff),
-        gridThickness: 0.05,
-        gridDensity: 25.0,
-        
-        fadeSpread: 0.7,
-        fadeLevel: -0.9,
-        transition: 0.3,
 
-        fadeSpreadEnd: 0.5,
-        fadeLevelEnd: 0.15,
-        transitionEnd: 1.0,
-    }
     private _uniforms = {
-        matcap: { value: this._uniformsValues.matcap },
-        gridColor: { value: this._uniformsValues.gridColor },
-        gridThickness: { value: this._uniformsValues.gridThickness },
-        gridDensity: { value: this._uniformsValues.gridDensity },
-        fadeSpread: { value: this._uniformsValues.fadeSpread },
-        fadeLevel: { value: this._uniformsValues.fadeLevel },
-        transition: { value: this._uniformsValues.transition }
+        matcap: { value: new TextureLoader().load("img/matcap_1.png") },
+        gridColor: { value: new Color(0xffffff) },
+        gridThickness: { value: 0.05 },
+        gridDensity: { value: 25.0 },
+        transition: { value: 0.0 },
+        scale: { value: 1.0 }
     }
 
     constructor(markerData: MarkerData) {
@@ -119,6 +107,11 @@ export class Marker {
     }
 
     private loadModel = (scene: Scene) => {
+        
+        // const gui = new GUI({autoPlace: true});
+
+        // gui.add(this._uniforms.transition, 'value', 0, 1, 0.01);
+        this._uniforms.scale.value = this._data.contentScale;
 
         this._contentMaterial = new ShaderMaterial({
             vertexShader: String(vertex),
@@ -136,7 +129,7 @@ export class Marker {
                     if ((<Mesh>child).isMesh) {
                         this._contentMesh = <Mesh>child;
                         this._contentMesh.material = this._contentMaterial;
-                        this._contentMesh.scale.setScalar(0.16);
+                        this._contentMesh.scale.setScalar(this.data.contentScale);
 
                         scene.add(this._contentMesh);
 
@@ -180,7 +173,8 @@ export class Marker {
         new Tween(this._markerMesh.rotation)
             .to({
                     z: isSelected ? 6 * -Math.PI / 2 : 0,
-                    y: isSelected ? -Math.PI / 2 : 0 },
+                    y: isSelected ? -Math.PI / 2 : 0 
+                },
                 2000)
             .easing(TWEEN.Easing.Exponential.In)
             .start()
@@ -197,32 +191,20 @@ export class Marker {
         if (this._contentMesh == null) return;
 
         if (this._isSelected) {
-            this._uniforms.fadeLevel.value = this._uniformsValues.fadeLevel;
-            this._uniforms.fadeSpread.value = this._uniformsValues.fadeSpread;
-            this._uniforms.transition.value =  this._uniformsValues.transition;
+            this._uniforms.transition.value = 0;
 
             new Tween(this._uniforms)
-                .to({ 
-                        fadeLevel: { value: this._uniformsValues.fadeLevelEnd }, 
-                        fadeSpread: { value: this._uniformsValues.fadeSpreadEnd }, 
-                        transition: { value: this._uniformsValues.transitionEnd } 
-                    },
-                    2500)
-                .delay(Map.zoomDuration - 500)
+                .to({ transition: { value: 1 } }, 2500)
+                .delay(Map.zoomDuration)
                 .start()
-                .easing(Easing.Quadratic.InOut)
+                .easing(Easing.Quadratic.In)
                 .onStart(() => this._contentMesh.visible = this._isSelected);
 
         } else {
             new Tween(this._uniforms)
-                .to({ 
-                        fadeLevel: { value : this._uniformsValues.fadeLevel }, 
-                        fadeSpread: {value: this._uniformsValues.fadeSpread}, 
-                        transition: { value: 0 }
-                    },
-                    1250)
+                .to({ transition: { value: 0 } }, 600)
                 .start()
-                .easing(Easing.Quadratic.InOut)
+                .easing(Easing.Quadratic.In)
                 .onComplete(() => this._contentMesh.visible = this._isSelected );
 
         }
@@ -233,6 +215,7 @@ const glsl = x => x;
 
 const vertex: string = glsl`
     uniform float transition;
+    uniform float scale;
 
     varying vec3 vViewPosition;
     varying vec3 vWorldPosition;
@@ -244,7 +227,7 @@ const vertex: string = glsl`
     void main() {
         vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
 
-        float mixPos = smoothstep(0.2, -0.3, vWorldPosition.y + transition - 0.45);
+        float mixPos = step(transition, vWorldPosition.z / scale);
         vec4 newWorldPos = vec4(mix(vWorldPosition, vec3(0, -0.45, 0), mixPos), 1.0); 
 
         vec4 mvPosition = viewMatrix * newWorldPos;
@@ -257,17 +240,16 @@ const vertex: string = glsl`
 
 const frag: string = glsl`
     uniform sampler2D matcap;
-    uniform float fadeLevel;
-    uniform float fadeSpread;
+
     uniform vec3 gridColor;
     uniform float gridThickness;
     uniform float gridDensity;
 
     uniform float transition;
+    uniform float scale;
 
     varying vec3 vViewPosition;
     varying vec3 vWorldPosition;
-    
 
     void main() {
         vec3 fdx = vec3(dFdx(vViewPosition.x), dFdx(vViewPosition.y), dFdx(vViewPosition.z));
@@ -279,27 +261,18 @@ const frag: string = glsl`
 	    vec3 y = cross(viewDir, x);
 	    vec2 uv = vec2(dot(x, normal), dot(y,normal)) * 0.495 + 0.5;
         vec4 matcapColor = texture2D(matcap, uv);
-        float poweredTransition = pow(transition, 24.0);
-        matcapColor = mix(vec4(vec3(0.0), 1.0), matcapColor, poweredTransition);
 
         float gridX = step(gridThickness, fract(vWorldPosition.x * gridDensity));
-        float gridY = step(gridThickness, fract(vWorldPosition.y * gridDensity));
-        float gridZ = step(gridThickness, fract(vWorldPosition.z * gridDensity));
+        float gridY = step(gridThickness, fract(vWorldPosition.y * gridDensity + transition));
+        float gridZ = step(gridThickness, fract(vWorldPosition.z * gridDensity + transition));
         float grid = 1.0 - gridX * gridY * gridZ;
 
-        float fade = smoothstep(fadeLevel, fadeLevel + fadeSpread, vWorldPosition.y);
-        
-        vec4 fadedGridColor = mix(
-            vec4(0.0), 
-            vec4(gridColor, 1.0), 
-            mix(grid, grid * fade, poweredTransition * poweredTransition)
-        );
-        vec4 color = mix(fadedGridColor, matcapColor, 1.0 - fade);
+        float scan = step(transition, vWorldPosition.z / scale);
+        vec4 scanColor = mix(vec4(grid), vec4(1.0), scan);
+        scanColor = mix(scanColor, matcapColor, pow(transition, 10.0));
+        scanColor.a *= 1.0 - pow(1.0 - transition, 10.0);
 
-        float fadeEdge = 1.0 - step(fadeLevel + fadeSpread, vWorldPosition.y);
-        color.a *= fadeEdge;
-
-        gl_FragColor = color;
+        gl_FragColor = scanColor;
     }
 
 `;
