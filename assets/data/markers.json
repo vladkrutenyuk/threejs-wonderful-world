@@ -7,7 +7,7 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Colosseum",
-    "contentUrl": "models/Colosseum.glb",
+    "contentUrl": "models/Colosseum_Draco.glb",
     "contentScale": 0.2
   },
   {
@@ -18,7 +18,7 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
-    "contentUrl": "models/GreatWallOfChina.glb",
+    "contentUrl": "models/GreatWallOfChina_Draco.glb",
     "contentScale": 0.4
   },
   {
@@ -29,7 +29,7 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Machu_Picchu",
-    "contentUrl": "models/MachuPicchu.glb",
+    "contentUrl": "models/MachuPicchu_Draco.glb",
     "contentScale": 0.25
   },
   {
@@ -40,7 +40,7 @@
       "z": 0.54
     },
     "url": "https://en.wikipedia.org/wiki/Petra",
-    "contentUrl": "models/PetraJordan.glb",
+    "contentUrl": "models/PetraJordan_Draco.glb",
     "contentScale": 0.5
   },
   {
@@ -51,7 +51,7 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Taj_Mahal",
-    "contentUrl": "models/TajMahal.glb",
+    "contentUrl": "models/TajMahal_Draco.glb",
     "contentScale": 0.35
   },
   {
@@ -62,7 +62,7 @@
       "z": 0.51
     },
     "url": "https://en.wikipedia.org/wiki/Christ_the_Redeemer_(statue)",
-    "contentUrl": "models/ChristTheRedeemer.glb",
+    "contentUrl": "models/ChristTheRedeemer_Draco.glb",
     "contentScale": 0.5
   },
   {
@@ -73,7 +73,7 @@
       "z": 0.5
     },
     "url": "https://en.wikipedia.org/wiki/Chichen_Itza",
-    "contentUrl": "models/ChichenItza.glb",
+    "contentUrl": "models/ChichenItza_Draco.glb",
     "contentScale": 0.25
   }
 ]

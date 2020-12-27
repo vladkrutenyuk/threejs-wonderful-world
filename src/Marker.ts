@@ -8,8 +8,7 @@ import TWEEN, { Easing, Tween } from "@tweenjs/tween.js";
 import { UIManager } from "./UIManager";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { Map } from "./Map";
-import { GUI } from "three/examples/jsm/libs/dat.gui.module"
-import { MathUtils } from 'three';
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
 
 export type MarkerData = {
     "title": string,
@@ -108,10 +107,7 @@ export class Marker {
     }
 
     private loadModel = (scene: Scene) => {
-        
-        // const gui = new GUI({autoPlace: true});
 
-        // gui.add(this._uniforms.transition, 'value', 0, 1, 0.01);
         this._uniforms.scale.value = this._data.contentScale;
 
         this._contentMaterial = new ShaderMaterial({
@@ -123,6 +119,9 @@ export class Marker {
         });
 
         const loader = new GLTFLoader();
+        const dracoLoader = new DRACOLoader();
+        dracoLoader.setDecoderPath("draco/")
+        loader.setDRACOLoader(dracoLoader);
         
         loader.load(this._data.contentUrl,
             (gltf) => {
@@ -194,7 +193,7 @@ export class Marker {
         let duration = this._isSelected ? 2500 : 600;
 
         if (this._isSelected) {
-            
+
             this._uniforms.transition.value = 0;
 
             new Tween(this._uniforms)
