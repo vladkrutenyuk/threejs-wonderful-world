@@ -28,7 +28,7 @@ export class Marker {
     public static readonly octahedronRadius = 0.025;
 
     public get data(): MarkerData { return this._data };
-    private _data: MarkerData;
+    private readonly _data: MarkerData;
     
     public get markerMesh(): Mesh { return this._markerMesh };
     private readonly _markerMesh: Mesh;
