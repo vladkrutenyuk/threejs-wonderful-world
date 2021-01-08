@@ -6,7 +6,9 @@
       "y": 0.729,
       "z": 0.51
     },
-    "url": "https://en.wikipedia.org/wiki/Colosseum"
+    "url": "https://en.wikipedia.org/wiki/Colosseum",
+    "contentUrl": "models/Colosseum_Draco.glb",
+    "contentScale": 0.2
   },
   {
     "title": "Great Wall of China",
@@ -15,7 +17,9 @@
       "y": 0.73,
       "z": 0.51
     },
-    "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China"
+    "url": "https://en.wikipedia.org/wiki/Great_Wall_of_China",
+    "contentUrl": "models/GreatWallOfChina_Draco.glb",
+    "contentScale": 0.4
   },
   {
     "title": "Machu Picchu",
@@ -24,7 +28,9 @@
       "y": 0.43,
       "z": 0.51
     },
-    "url": "https://en.wikipedia.org/wiki/Machu_Picchu"
+    "url": "https://en.wikipedia.org/wiki/Machu_Picchu",
+    "contentUrl": "models/MachuPicchu_Draco.glb",
+    "contentScale": 0.25
   },
   {
     "title": "Petra",
@@ -33,7 +39,9 @@
       "y": 0.66,
       "z": 0.54
     },
-    "url": "https://en.wikipedia.org/wiki/Petra"
+    "url": "https://en.wikipedia.org/wiki/Petra",
+    "contentUrl": "models/PetraJordan_Draco.glb",
+    "contentScale": 0.5
   },
   {
     "title": "Taj Mahal",
@@ -42,7 +50,9 @@
       "y": 0.65,
       "z": 0.51
     },
-    "url": "https://en.wikipedia.org/wiki/Taj_Mahal"
+    "url": "https://en.wikipedia.org/wiki/Taj_Mahal",
+    "contentUrl": "models/TajMahal_Draco.glb",
+    "contentScale": 0.35
   },
   {
     "title": "Christ the Redeemer",
@@ -51,7 +61,9 @@
       "y": 0.37,
       "z": 0.51
     },
-    "url": "https://en.wikipedia.org/wiki/Christ_the_Redeemer_(statue)"
+    "url": "https://en.wikipedia.org/wiki/Christ_the_Redeemer_(statue)",
+    "contentUrl": "models/ChristTheRedeemer_Draco.glb",
+    "contentScale": 0.5
   },
   {
     "title": "Chichen Itza",
@@ -60,15 +72,8 @@
       "y": 0.62,
       "z": 0.5
     },
-    "url": "https://en.wikipedia.org/wiki/Chichen_Itza"
-  },
-  {
-    "title": "Great Pyramid of Giza",
-    "mapNormalizedPosition": {
-      "x": 0.58,
-      "y": 0.657,
-      "z": 0.51
-    },
-    "url": "https://en.wikipedia.org/wiki/Great_Pyramid_of_Giza"
+    "url": "https://en.wikipedia.org/wiki/Chichen_Itza",
+    "contentUrl": "models/ChichenItza_Draco.glb",
+    "contentScale": 0.25
   }
 ]

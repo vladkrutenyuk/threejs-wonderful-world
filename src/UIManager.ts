@@ -1,6 +1,6 @@
 import TWEEN, { Tween } from "@tweenjs/tween.js";
 import stringLerp from "string-lerp";
-import {MathUtils} from "three";
+import { MathUtils } from "three";
 
 export class UIManager {
     private static wonderNameElement = document.getElementById("wonderName");
