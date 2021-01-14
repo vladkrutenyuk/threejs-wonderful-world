@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "watch": "parcel index.html"
+    "watch": "parcel index.html",
+    "prod-build" : "parcel build index.html"
   },
   "dependencies": {
     "@tweenjs/tween.js": "18",
