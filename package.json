@@ -1,7 +1,7 @@
 {
   "name": "threejs-world-map-interactive-client",
   "version": "1.0.0",
-  "main": "client.js",
+  "main": "index.js",
   "license": "MIT",
   "scripts": {
     "watch": "parcel index.html"
