@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "watch": "parcel index.html",
-    "prod-build" : "parcel build index.html"
+    "build": "rimraf dist && parcel build index.html"
   },
   "dependencies": {
     "@tweenjs/tween.js": "18",
@@ -16,6 +16,7 @@
     "@types/three": "^0.103.2",
     "parcel-bundler": "^1.12.4",
     "parcel-plugin-static-files-copy": "^2.5.0",
+    "rimraf": "^3.0.2",
     "typescript": "^4.0.5"
   },
   "staticFiles": {
