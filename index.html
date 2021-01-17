@@ -4,34 +4,47 @@
     <title>Wonders of the world</title>
     <script type="module" src="src/index.ts"></script>
     <link rel="stylesheet" href="styles.css">
+    <link rel="shortcut icon" href="assets/img/romb-turbo.png" type="image/png">
+    <link rel="icon" href="assets/img/romb-turbo.png" type="image/png">
 </head>
 
 <body>
-    <div  class="headerSpace">
-        <div id="title">Wonders of the world</div>
+    <div class="headerSpace">
+        <div
+                id="title">Wonders of the world
+        </div>
         <a class="myLink" id="wonderName"
             target="popup"
-            onclick="window.open('https://twitter.com/vladkrutenyuk')"></a>
+            onclick="window.open('https://twitter.com/vladkrutenyuk')">
+        </a>
     </div>
 
-    <div  class="lowerSpace">
-        3D Interactive by VLAD KRUTENYUK -->
-        <a class="myLink"
-        target="popup"
-        onclick="window.open('https://twitter.com/vladkrutenyuk')">
-            Twitter
-        </a>
-        <a class="myLink"
-        target="popup"
-        onclick="window.open('https://instagram.com/vladkrutenyuk')">
-            Instagram
-        </a>
-        <a class="myLink"
-        target="popup"
-        onclick="window.open('https://artstation.com/vladkrutenyuk')">
-            ArtStation
-        </a>
+    <div class="bottomLeftSpace">
+        <span class="smallText">3D Interactive by</span>
+        <br>
+        <span class="bigText">Vlad Krutenyuk</span>
+    </div>
 
+    <div class="bottomRightSpace">
+
+        <div class="linkItem linkText smallText">
+            <a
+               target="popup"
+               onclick="window.open('https://twitter.com/vladkrutenyuk/')">Twitter</a>
+            <img src="assets/icons/icon-twitter.svg" height="18px" alt="lorem">
+        </div>
+        <div class="linkItem linkText smallText">
+            <a
+               target="popup"
+               onclick="window.open('https://instagram.com/vladkrutenyuk/')">Instagram</a>
+            <img src="assets/icons/icon-instagram.svg" height="18px" alt="lorem">
+        </div>
+        <div class="linkItem linkText smallText">
+            <a
+               target="popup"
+               onclick="window.open('https://vladkrutenyuk.artstation.com/')">ArtStation</a>
+            <img src="assets/icons/icon-artstation.svg" height="18px" alt="lorem">
+        </div>
     </div>
 
     <div id="hintMouseOver">

@@ -3,12 +3,13 @@ import stringLerp from "string-lerp";
 import { MathUtils } from "three";
 
 export class UIManager {
-    private static wonderNameElement = document.getElementById("wonderName");
-    private static titleElement = document.getElementById("title");
+    public static wonderNameElement = document.getElementById("wonderName");
+    public static titleElement = document.getElementById("title");
     private static hintElement = document.getElementById("hintMouseOver");
     private static hintTweenGroup = new TWEEN.Group();
 
     public static setWonderNameTitle = (text: string, url: string): void => {
+        UIManager.wonderNameElement.style.display = "inline";
         UIManager.wonderNameElement.setAttribute("onclick", "window.open('" + url + "')");
         const fromText: string = UIManager.wonderNameElement.textContent;
 
@@ -26,6 +27,7 @@ export class UIManager {
                         tweener.textValue);
             })
             .start()
+            .onComplete(() => UIManager.wonderNameElement.style.display = (text == "") ? "none" : "flow");
     }
 
     public static setTitle = (text: string, shallMakeSmaller: boolean): void => {
@@ -36,7 +38,7 @@ export class UIManager {
             .to({ value: shallMakeSmaller ? 0 : 1 }, 1000)
             .start()
             .onUpdate(() => {
-                UIManager.titleElement.style.fontSize = MathUtils.lerp(12, 17, tweener.value) + "px";
+                UIManager.titleElement.style.fontSize = MathUtils.lerp(14, 17, tweener.value) + "px";
             });
     }
 
@@ -74,7 +76,9 @@ export class UIManager {
                         tweener.value);
             })
             .delay(isEnabling ? 600 : 0)
-            .start();
+            .start()
+            .onStart(() => UIManager.hintElement.style.display = "inline")
+            .onComplete(() => UIManager.hintElement.style.display = isEnabling ? "inline" : "none");
     }
 
     public static update = (): void => {
