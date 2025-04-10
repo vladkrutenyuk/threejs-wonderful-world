@@ -1,8 +1,8 @@
 import { GUI } from 'dat.gui'
 import { Clock, Color, GridHelper, Mesh, PlaneGeometry, ShaderMaterial, TextureLoader } from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-import { setElementVisibility } from '../../helpers/set-element-visibility'
-import { World } from '../World'
+import { setElementVisibility } from '../helpers/set-element-visibility'
+import { World } from '../modules/World'
 
 setElementVisibility(document.querySelector('.header') as HTMLElement, false)
 setElementVisibility(document.querySelector('.footer') as HTMLElement, false)
