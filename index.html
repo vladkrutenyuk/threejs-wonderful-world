@@ -1,51 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <title>Wonders of the world</title>
-    <script type="module" src="src/index.ts"></script>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="shortcut icon" href="assets/img/romb-turbo.png" type="image/png">
-    <link rel="icon" href="assets/img/romb-turbo.png" type="image/png"> 
-</head>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<meta name="robots" content="index, follow" />
 
-<body>
-    <div class="headerSpace">
-        <div id="title">Wonders of the world</div>
-        <a class="myLink" id="wonderName"
-            target="popup"
-            onclick="window.open('https://twitter.com/vladkrutenyuk')">
-        </a>
-    </div>
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<title>Wonders of the World | 3D Interactive Map</title>
+		<meta
+			name="keywords"
+			content="WebGL, 3D, GLSL, Shaders, Map, World, Wonders, Interactive, Three.js, threejs, three, typescript, javascript, codeart, creative coding"
+		/>
+		<meta name="author" content="Vlad Krutenyuk" />
+		<meta
+			name="description"
+			content="3D Interactive Map where you can explore 7 wonders of the world. Made by Vlad Krutenyuk (kvy) using WebGL via Three.js"
+		/>
+		<!-- Facebook Meta Tags -->
+		<meta property="og:site_name" content="Wonders of the World" />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content="https://wonders.kvy.world" />
+		<meta property="og:title" content="Wonders of the World" />
+		<meta
+			property="og:description"
+			content="3D Interactive Map where you can explore 7 wonders of the world. Made by Vlad Krutenyuk (kvy) using WebGL via Three.js"
+		/>
+		<meta property="og:image" content="/preview.jpg" />
+		<!-- Twitter Meta Tags -->
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta property="twitter:url" content="https://wonders.kvy.world" />
+		<meta name="twitter:title" content="Wonders of the World" />
+		<meta
+			name="twitter:description"
+			content="3D Interactive Map where you can explore 7 wonders of the world. Made by Vlad Krutenyuk (kvy) using WebGL via Three.js"
+		/>
+		<meta name="twitter:image" content="/preview.jpg" />
 
-    <div class="bottomLeftSpace">
-        <span class="smallText">3D Interactive by</span>
-        <br>
-        <span class="bigText">Vlad Krutenyuk</span>
-    </div>
+		<link rel="stylesheet" href="./src/styles.css" />
+		<meta name="google-site-verification" content="IrXIsT-1I0OfxzaXOzzwrYs2bkAm_cKgNCcswqjJgGQ" />
+	</head>
 
-    <div class="bottomRightSpace">
+	<body>
+		<div id="three-canvas-root"></div>
 
-        <div class="linkItem linkText smallText">
-            <a
-               target="popup"
-               onclick="window.open('https://twitter.com/vladkrutenyuk/')">Twitter</a>
-            <img src="assets/icons/icon-twitter.svg" height="18px" alt="lorem">
-        </div>
-        <div class="linkItem linkText smallText">
-            <a
-               target="popup"
-               onclick="window.open('https://instagram.com/vladkrutenyuk/')">Instagram</a>
-            <img src="assets/icons/icon-instagram.svg" height="18px" alt="lorem">
-        </div>
-        <div class="linkItem linkText smallText">
-            <a
-               target="popup"
-               onclick="window.open('https://vladkrutenyuk.artstation.com/')">ArtStation</a>
-            <img src="assets/icons/icon-artstation.svg" height="18px" alt="lorem">
-        </div>
-    </div>
+		<header class="header ui">
+			<div id="title">Wonders of the world</div>
 
-    <div id="hintMouseOver">
-    </div>
-</body>
+			<a id="wonder_title" target="_blank" class="hidden hover_glow"></a>
+		</header>
+
+		<footer class="footer ui">
+			<span>
+				Made with &lt;3 by
+				<a class="hover_glow" href="https://x.com/vladkrutenyuk" target="_blank">Vlad Krutenyuk</a>&nbsp;using
+				<a href="https://threejs.org/" class="hover_glow" target="_blank">three.js</a>
+			</span>
+		</footer>
+
+		<div id="tooltip" class="hidden ui"></div>
+
+		<div class="mobile_blocker">
+			<code>mobile version is not available</code>
+			<code>-</code>
+			<code>try it on desktop please</code>
+		</div>
+
+		<script type="module" src="/src/main.ts"></script>
+	</body>
 </html>

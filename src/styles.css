@@ -1,0 +1,130 @@
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    font-family: "JetBrainsMono Regular", monospace;
+    background-color: #101010;
+}
+
+#three-canvas-root {
+    width: 100vw;
+    height: 100vh;
+}
+
+.header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+
+    color: #f2f2f2;
+    text-align: center;
+    text-shadow: 1px 3px 0.4em black;
+
+    user-select: none;
+    z-index: 1;
+    /* background-color: rgba(0, 0, 0, 0.5); */
+}
+
+#title {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding: 5px;
+    font-size: 17px;
+    transition: 200ms;
+}
+
+#title.small {
+    font-size: 12px;
+}
+
+#title.big {
+    font-size: 17px;
+    transition: 1500ms;
+}
+
+#wonder_title {
+    padding: 5px 8px;
+    padding-top: 6px;
+    font-size: 17px;
+    background-color: black;
+    border:1px solid white;
+    color: #f2f2f2;
+    text-decoration: solid;
+}
+
+#tooltip {
+    padding: 6px;
+    position: absolute;
+    font-size: 15px;
+    text-shadow: 1px 3px 0.4em black;
+    color: #f2f2f2;
+    background-color: rgba(0, 0, 0, 0.75);
+    text-transform: uppercase;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding-bottom: 16px;
+
+    font-size: 13px;
+    color: #f2f2f2bb;
+    text-align: center;
+    text-shadow: 1px 3px 0.4em black;
+
+    user-select: none;
+    z-index: 1;
+}
+
+.footer > span {
+    /* background-color: rgba(0, 0, 0, 0.75); */
+}
+
+.hover_glow {
+    color: #f2f2f2;
+    text-shadow: 1px 3px 0.4em black;
+    /*text-decoration: underline;*/
+    cursor: pointer;
+}
+
+.hover_glow:hover {
+    color: white;
+    text-shadow: 1px 1px 0.5em white;
+}
+
+.hidden {
+    display: none;
+}
+
+.mobile_blocker {
+    display: none;
+}
+@media only screen and (max-width: 768px) {
+    .mobile_blocker {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        color: white;
+        font-size: 16px;
+        text-align: center;
+        background-color: #101010;
+        z-index: 1;
+        pointer-events: none;
+    }
+}
+
+@font-face {
+    font-family: "JetBrainsMono Regular";
+    src: url("/fonts/JetBrainsMono/JetBrainsMono-Regular.woff") format("woff");
+}
