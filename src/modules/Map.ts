@@ -1,6 +1,7 @@
 import TWEEN, { Tween } from "@tweenjs/tween.js";
 import * as THREE from "three";
 import { MARKERS } from "../constants/markers";
+import { withLegacyLightAttenuation } from "../helpers/legacy-lights";
 import { Marker } from "./Marker";
 import Tooltip from "./Tooltip";
 
@@ -29,7 +30,7 @@ export class Map {
 	}
 
 	private selectedMarker: THREE.Object3D | null = null;
-	private clock: THREE.Clock;
+	private timer = new THREE.Timer();
 	private time = {
 		value: 0,
 	};
@@ -40,13 +41,26 @@ export class Map {
 	constructor(scene: THREE.Scene) {
 		this._scene = scene;
 
-		this.clock = new THREE.Clock();
 		const textureLoader = new THREE.TextureLoader();
+		const map = textureLoader.load("/img/world_color.jpg");
+		const specularMap = textureLoader.load("/img/world_specular.jpg");
+		const displacementMap = textureLoader.load("/img/world_height.jpg");
+
+		// Since r151 every texture has its own uv transform, while in r150 the transform of `map`
+		// was applied to all maps. The zoom tweens map.offset/repeat, so the specular and
+		// displacement maps share the same vectors to keep following it.
+		map.center.set(0.5, 0.5);
+		for (const texture of [specularMap, displacementMap]) {
+			texture.offset = map.offset;
+			texture.repeat = map.repeat;
+			texture.center = map.center;
+		}
+
 		this.geometry = new THREE.PlaneGeometry(3.6, 1.8, 140 * 1.3, 70 * 1.3);
 		this._material = new THREE.MeshPhongMaterial({
-			map: textureLoader.load("/img/world_color.jpg"),
-			specularMap: textureLoader.load("/img/world_specular.jpg"),
-			displacementMap: textureLoader.load("/img/world_height.jpg"),
+			map,
+			specularMap,
+			displacementMap,
 			displacementBias: -0.25,
 			displacementScale: 0.45,
 			wireframe: true,
@@ -63,17 +77,17 @@ export class Map {
 				noise +
 				pars_vertex +
 				shader.vertexShader.replace("#include <begin_vertex>", vertex);
-			shader.fragmentShader =
+			shader.fragmentShader = withLegacyLightAttenuation(
 				pars_frag +
-				shader.fragmentShader.replace(
-					"#include <alphamap_fragment>",
-					alpha_edges_frag
-				);
+					shader.fragmentShader.replace(
+						"#include <alphamap_fragment>",
+						alpha_edges_frag
+					)
+			);
 
 			this._material.userData.shader = shader;
 		};
 
-		this._material.map?.center.set(0.5, 0.5);
 		this.mesh = new THREE.Mesh(this.geometry, this._material);
 		this._scene.add(this.mesh);
 
@@ -101,7 +115,8 @@ export class Map {
 	};
 
 	private animateWater() {
-		this.time.value = this.clock.getElapsedTime();
+		this.timer.update();
+		this.time.value = this.timer.getElapsed();
 	}
 
 	public update() {
@@ -273,13 +288,14 @@ const vertex = /*glsl*/ `
     float timeScale = 0.4;
     float strength = 0.2;
 
-    float normalizedHeight = texture2D(displacementMap, vUv).x;
+    // vMapUv, vDisplacementMapUv: uv transformed by map.offset/repeat (both were vUv before r151)
+    float normalizedHeight = texture2D(displacementMap, vDisplacementMapUv).x;
     float waterMask = 1.0 - step(0.37, normalizedHeight);
 
-    float noise1 = noise(vUv3 * vec2(noise(vUv), 1) * vec2(5.0 * scale, scale) + vec2(-time, time) * timeScale);
+    float noise1 = noise(vUv3 * vec2(noise(vMapUv), 1) * vec2(5.0 * scale, scale) + vec2(-time, time) * timeScale);
     float noise2 = noise(vUv3 * vec2(1, noise(vUv3)) * vec2(scale, scale * 6.0) + vec2(time, -time) * timeScale);
-    float noise3 = noise(vUv * vec2(noise(vUv)) * vec2(3.0 * scale) + vec2(time, -time) * timeScale);
-    float noise4 = noise(vUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
+    float noise3 = noise(vMapUv * vec2(noise(vMapUv)) * vec2(3.0 * scale) + vec2(time, -time) * timeScale);
+    float noise4 = noise(vMapUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
 
     float noiseResult = (noise1 + noise2 + noise3 + noise4) / 4.0;
     transformed.z -= waterMask * (noiseResult * strength - 0.07);

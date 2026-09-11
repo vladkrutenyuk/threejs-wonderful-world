@@ -13,17 +13,17 @@
   },
   "devDependencies": {
     "@types/dat.gui": "^0.7.7",
-    "@types/three": "^0.150.0",
+    "@types/three": "^0.184.1",
     "dotenv": "^16.0.3",
     "prettier": "^2.8.4",
     "ssh2-sftp-client": "^9.0.4",
-    "typescript": "^4.9.3",
+    "typescript": "^5.9.3",
     "vite": "^6.2.5"
   },
   "dependencies": {
     "@tweenjs/tween.js": "^18.6.4",
     "dat.gui": "^0.7.9",
     "string-lerp": "^1.0.3",
-    "three": "^0.150.0"
+    "three": "0.184.0"
   }
 }

@@ -1,7 +1,7 @@
 import TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three";
-import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
+import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MarkerData } from "../constants/markers";
 import Header, { HeaderStyle } from "./Header";
 import { Map } from "./Map";

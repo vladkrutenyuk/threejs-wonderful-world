@@ -1,5 +1,6 @@
 import TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three";
+import { legacyLightIntensity } from "../helpers/legacy-lights";
 import { Map } from "./Map";
 import { Marker } from "./Marker";
 
@@ -63,7 +64,7 @@ export class MapCursor {
 		this._mapHalfHeight = map.geometry.parameters.height / 2;
 		this._markersGroup = map.markersGroup;
 
-		this.pointLight = new THREE.PointLight(0xffffff, 3, 0.5);
+		this.pointLight = new THREE.PointLight(0xffffff, legacyLightIntensity(3), 0.5);
 		this.pointLight.position.z = 0.15;
 		this.scene.add(this.pointLight);
 

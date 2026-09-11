@@ -1,6 +1,6 @@
 import { GUI } from 'dat.gui'
-import { Clock, Color, GridHelper, Mesh, PlaneGeometry, ShaderMaterial, TextureLoader } from 'three'
-import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
+import { Color, GridHelper, Mesh, PlaneGeometry, ShaderMaterial, TextureLoader, Timer } from 'three'
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js'
 import { setElementVisibility } from '../helpers/set-element-visibility'
 import { World } from '../modules/World'
 
@@ -13,7 +13,7 @@ world.controls.dispose()
 world.controls = new OrbitControls(world.camera, world.renderer.domElement)
 world.controls.maxDistance = 50
 world.controls.minDistance = 0
-const clock = new Clock()
+const timer = new Timer()
 const textureLoader = new TextureLoader()
 const mapGeometry = new PlaneGeometry(3.6, 1.8, 140 * 1.3, 70 * 1.3)
 
@@ -162,7 +162,8 @@ gui.add(gridToogle, 'value').name('grid').onChange(value => grid.visible = value
 
 function animate() {
 	requestAnimationFrame(animate)
-	uniforms.u_time.value = clock.getElapsedTime()
+	timer.update()
+	uniforms.u_time.value = timer.getElapsed()
 	world.update()
 }
 animate()
