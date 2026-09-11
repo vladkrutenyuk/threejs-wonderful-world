@@ -1,5 +1,28 @@
 import TWEEN from "@tweenjs/tween.js";
-import * as THREE from "three";
+import * as THREE from "three/webgpu";
+import {
+	Fn,
+	cameraProjectionMatrix,
+	cameraViewMatrix,
+	cross,
+	dFdx,
+	dFdy,
+	dot,
+	float,
+	fract,
+	mix,
+	modelWorldMatrix,
+	normalize,
+	positionGeometry,
+	pow,
+	step,
+	texture,
+	uniform,
+	varying,
+	vec2,
+	vec3,
+	vec4,
+} from "three/tsl";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MarkerData } from "../constants/markers";
@@ -36,16 +59,15 @@ export class Marker {
 	private _isSelected: boolean = false;
 
 	private _contentMesh!: THREE.Mesh;
-	private _contentMaterial: THREE.ShaderMaterial;
+	private _contentMaterial: THREE.NodeMaterial;
 	private tooltip: Tooltip;
 
-	private _uniforms = {
-		matcap: { value: new THREE.TextureLoader().load("/img/matcap_1.png") },
-		gridColor: { value: new THREE.Color(0xffffff) },
-		gridThickness: { value: 0.05 },
-		gridDensity: { value: 25.0 },
-		transition: { value: 0.0 },
-		scale: { value: 1.0 },
+	private _uniforms: ContentUniforms = {
+		matcap: texture(new THREE.TextureLoader().load("/img/matcap_1.png")),
+		gridThickness: uniform(0.05),
+		gridDensity: uniform(25.0),
+		transition: uniform(0.0),
+		scale: uniform(1.0),
 	};
 
 	constructor(data: MarkerData, tooltip: Tooltip) {
@@ -80,13 +102,11 @@ export class Marker {
 			})
 		);
 
-		this._contentMaterial = new THREE.ShaderMaterial({
-			vertexShader: String(vertex),
-			fragmentShader: String(frag),
-			uniforms: this._uniforms,
-			transparent: true,
-			depthTest: true,
-		});
+		this._contentMaterial = new THREE.NodeMaterial();
+		this._contentMaterial.transparent = true;
+		this._contentMaterial.depthTest = true;
+		this._contentMaterial.vertexNode = contentVertex(this._uniforms);
+		this._contentMaterial.fragmentNode = contentFragment(this._uniforms);
 	}
 
 	public spawnOnMap = (
@@ -266,64 +286,47 @@ export class Marker {
 	};
 }
 
-const vertex = /*glsl*/ `
-	uniform float transition;
-	uniform float scale;
+type ContentUniforms = {
+	matcap: THREE.TextureNode;
+	gridThickness: THREE.UniformNode<"float", number>;
+	gridDensity: THREE.UniformNode<"float", number>;
+	transition: THREE.UniformNode<"float", number>;
+	scale: THREE.UniformNode<"float", number>;
+};
 
-	varying vec3 vViewPosition;
-	varying vec3 vWorldPosition;
+const contentWorldPosition = varying(modelWorldMatrix.mul(vec4(positionGeometry, 1.0)).xyz, "vWorldPosition");
 
-	float map(float value, float min1, float max1, float min2, float max2) {
-		return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
-	}
+// while transitioning, the part of the wonder above the scan line collapses into a hidden point
+const contentViewPosition = ({ transition, scale }: ContentUniforms) => {
+	const mixPos = step(transition, contentWorldPosition.z.div(scale));
+	const newWorldPos = vec4(mix(contentWorldPosition, vec3(0, -0.45, 0), mixPos), 1.0);
+	return cameraViewMatrix.mul(newWorldPos);
+};
 
-	void main() {
-		vWorldPosition = (modelMatrix * vec4(position, 1.0)).xyz;
+const contentVertex = (uniforms: ContentUniforms) => cameraProjectionMatrix.mul(contentViewPosition(uniforms));
 
-		float mixPos = step(transition, vWorldPosition.z / scale);
-		vec4 newWorldPos = vec4(mix(vWorldPosition, vec3(0, -0.45, 0), mixPos), 1.0); 
+const contentFragment = (uniforms: ContentUniforms) =>
+	Fn(() => {
+		const { matcap, gridThickness, gridDensity, transition, scale } = uniforms;
+		const viewPosition = varying(contentViewPosition(uniforms).xyz.negate(), "vViewPosition");
 
-		vec4 mvPosition = viewMatrix * newWorldPos;
+		// flat normal from the screen-space derivatives of the view position, then matcap
+		const normal = normalize(cross(dFdx(viewPosition), dFdy(viewPosition)));
+		const viewDir = normalize(viewPosition);
+		const x = normalize(vec3(viewDir.z, 0.0, viewDir.x.negate()));
+		const y = cross(viewDir, x);
+		const matcapUv = vec2(dot(x, normal), dot(y, normal)).mul(0.495).add(0.5);
+		const matcapColor = matcap.sample(matcapUv);
 
-		vViewPosition = -mvPosition.xyz;
-		gl_Position = projectionMatrix * mvPosition;
-	}
-`;
+		const gridX = step(gridThickness, fract(contentWorldPosition.x.mul(gridDensity)));
+		const gridY = step(gridThickness, fract(contentWorldPosition.y.mul(gridDensity).add(transition)));
+		const gridZ = step(gridThickness, fract(contentWorldPosition.z.mul(gridDensity).add(transition)));
+		const grid = float(1.0).sub(gridX.mul(gridY).mul(gridZ));
 
-const frag = /*glsl*/ `
-	uniform sampler2D matcap;
+		const scan = step(transition, contentWorldPosition.z.div(scale));
+		const scanColor = mix(vec4(grid), vec4(1.0), scan);
+		const resultCol = mix(scanColor, matcapColor, pow(transition, 10.0)).toVar();
+		resultCol.a.mulAssign(float(1.0).sub(pow(float(1.0).sub(transition), 10.0)));
 
-	uniform vec3 gridColor;
-	uniform float gridThickness;
-	uniform float gridDensity;
-
-	uniform float transition;
-	uniform float scale;
-
-	varying vec3 vViewPosition;
-	varying vec3 vWorldPosition;
-
-	void main() {
-		vec3 fdx = vec3(dFdx(vViewPosition.x), dFdx(vViewPosition.y), dFdx(vViewPosition.z));
-		vec3 fdy = vec3(dFdy(vViewPosition.x), dFdy(vViewPosition.y), dFdy(vViewPosition.z));
-		vec3 normal = normalize(cross(fdx,fdy));
-
-		vec3 viewDir = normalize(vViewPosition);
-		vec3 x = normalize(vec3(viewDir.z, 0.0, - viewDir.x));
-		vec3 y = cross(viewDir, x);
-		vec2 uv = vec2(dot(x, normal), dot(y,normal)) * 0.495 + 0.5;
-		vec4 matcapColor = texture2D(matcap, uv);
-
-		float gridX = step(gridThickness, fract(vWorldPosition.x * gridDensity));
-		float gridY = step(gridThickness, fract(vWorldPosition.y * gridDensity + transition));
-		float gridZ = step(gridThickness, fract(vWorldPosition.z * gridDensity + transition));
-		float grid = 1.0 - gridX * gridY * gridZ;
-
-		float scan = step(transition, vWorldPosition.z / scale);
-		vec4 scanColor = mix(vec4(grid), vec4(1.0), scan);
-		vec4 resultCol = mix(scanColor, matcapColor, pow(transition, 10.0));
-		resultCol.a *= 1.0 - pow(1.0 - transition, 10.0);
-		
-		gl_FragColor = resultCol;
-	}
-`;
+		return resultCol;
+	})();

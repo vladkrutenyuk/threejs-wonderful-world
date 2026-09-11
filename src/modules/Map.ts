@@ -1,7 +1,27 @@
 import TWEEN, { Tween } from "@tweenjs/tween.js";
-import * as THREE from "three";
+import * as THREE from "three/webgpu";
+import {
+	Fn,
+	dot,
+	float,
+	floor,
+	fract,
+	instancedBufferAttribute,
+	materialOpacity,
+	materialReference,
+	mix,
+	normalLocal,
+	positionLocal,
+	sin,
+	smoothstep,
+	step,
+	texture,
+	uniform,
+	uv,
+	vec2,
+	vec3,
+} from "three/tsl";
 import { MARKERS } from "../constants/markers";
-import { withLegacyLightAttenuation } from "../helpers/legacy-lights";
 import { Marker } from "./Marker";
 import Tooltip from "./Tooltip";
 
@@ -20,7 +40,7 @@ export class Map {
 	public get height() {
 		return this.geometry.parameters.height;
 	}
-	private _material: THREE.MeshPhongMaterial;
+	private _material: THREE.MeshPhongNodeMaterial;
 
 	private readonly _scene: THREE.Scene;
 
@@ -31,9 +51,7 @@ export class Map {
 
 	private selectedMarker: THREE.Object3D | null = null;
 	private timer = new THREE.Timer();
-	private time = {
-		value: 0,
-	};
+	private time = uniform(0);
 
 	stars = new THREE.Group();
 	markers: Marker[] = [];
@@ -50,43 +68,31 @@ export class Map {
 		// was applied to all maps. The zoom tweens map.offset/repeat, so the specular and
 		// displacement maps share the same vectors to keep following it.
 		map.center.set(0.5, 0.5);
-		for (const texture of [specularMap, displacementMap]) {
-			texture.offset = map.offset;
-			texture.repeat = map.repeat;
-			texture.center = map.center;
+		for (const other of [specularMap, displacementMap]) {
+			other.offset = map.offset;
+			other.repeat = map.repeat;
+			other.center = map.center;
 		}
 
 		this.geometry = new THREE.PlaneGeometry(3.6, 1.8, 140 * 1.3, 70 * 1.3);
-		this._material = new THREE.MeshPhongMaterial({
+		this._material = new THREE.MeshPhongNodeMaterial({
 			map,
 			specularMap,
-			displacementMap,
 			displacementBias: -0.25,
 			displacementScale: 0.45,
 			wireframe: true,
 			transparent: true,
 			opacity: 0.6,
 			depthWrite: true,
-			color: "white"
+			color: "white",
+			// MeshPhongNodeMaterial copies its defaults from a MeshPhongMaterial that three creates when
+			// the module loads, before color management is disabled, so the default specular (0x111111)
+			// would arrive converted to linear. Set it here to keep r150's value.
+			specular: 0x111111,
 		});
-
-		this._material.onBeforeCompile = (shader): void => {
-			shader.uniforms.time = this.time;
-
-			shader.vertexShader =
-				noise +
-				pars_vertex +
-				shader.vertexShader.replace("#include <begin_vertex>", vertex);
-			shader.fragmentShader = withLegacyLightAttenuation(
-				pars_frag +
-					shader.fragmentShader.replace(
-						"#include <alphamap_fragment>",
-						alpha_edges_frag
-					)
-			);
-
-			this._material.userData.shader = shader;
-		};
+		// the displacement map is applied in positionNode, after the water and the edges
+		this._material.positionNode = mapPosition(displacementMap, this.time);
+		this._material.opacityNode = edgesMask(uv(), 0.05, 0.25).mul(asFloat(materialOpacity));
 
 		this.mesh = new THREE.Mesh(this.geometry, this._material);
 		this._scene.add(this.mesh);
@@ -107,10 +113,15 @@ export class Map {
 			if (Math.sqrt(x * x + y * y + z * z) > 5) vertices.push(x, y, z);
 		}
 
-		const geometry = new THREE.BufferGeometry();
-		geometry.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3));
-		const material = new THREE.PointsMaterial({ color: 0x505050, size: 0.08 });
-		this.stars.add(new THREE.Points(geometry, material));
+		// WebGPU draws Points 1px wide whatever the size, so the stars are instanced sprites,
+		// which PointsNodeMaterial sizes the same way as PointsMaterial.
+		const positions = new THREE.InstancedBufferAttribute(new Float32Array(vertices), 3);
+		const material = new THREE.PointsNodeMaterial({ color: 0x505050, size: 0.08 });
+		material.positionNode = instancedBufferAttribute(positions);
+		const points = new THREE.Sprite(material);
+		points.count = positions.count;
+		points.frustumCulled = false;
+		this.stars.add(points);
 		this._scene.add(this.stars);
 	};
 
@@ -247,82 +258,65 @@ export class Map {
 	};
 }
 
-const noise: string = /*glsl*/ `
-    float random (in vec2 st) 
-    {
-        return fract(sin(dot(st.xy,
-                            vec2(12.9898,78.233)))
-                    * 43758.5453123);
-    }
+// material accessor nodes are typed as plain nodes in @types/three
+const asFloat = (node: THREE.MaterialNode | THREE.MaterialReferenceNode) => node as unknown as THREE.Node<"float">;
 
-    float noise (in vec2 st) 
-    {
-        vec2 i = floor(st);
-        vec2 f = fract(st);
+// the layouts make these real shader functions instead of inlining them at every call
+const random = Fn(
+	([st]: [THREE.Node<"vec2">]) => fract(sin(dot(st, vec2(12.9898, 78.233))).mul(43758.5453123)),
+	{ name: "random", type: "float", inputs: [{ name: "st", type: "vec2" }] }
+);
 
-        float a = random(i);
-        float b = random(i + vec2(1.0, 0.0));
-        float c = random(i + vec2(0.0, 1.0));
-        float d = random(i + vec2(1.0, 1.0));
+const noise = Fn(([st]: [THREE.Node<"vec2">]) => {
+	const i = floor(st);
+	const f = fract(st);
 
-        vec2 u = f*f*(3.0-2.0*f);
+	const a = random(i);
+	const b = random(i.add(vec2(1.0, 0.0)));
+	const c = random(i.add(vec2(0.0, 1.0)));
+	const d = random(i.add(vec2(1.0, 1.0)));
 
-        return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
-    }
-`;
+	const u = f.mul(f).mul(float(3.0).sub(f.mul(2.0)));
 
-const pars_vertex = /*glsl*/ `
-    uniform float time;
-    varying vec2 vUv3;
-`;
+	return mix(a, b, u.x).add(c.sub(a).mul(u.y).mul(u.x.oneMinus())).add(d.sub(b).mul(u.x).mul(u.y));
+}, { name: "noise", type: "float", inputs: [{ name: "st", type: "vec2" }] });
 
-const vertex = /*glsl*/ `
-    // Begin
-    vec3 transformed = vec3(position);
-    vUv3 = uv;
+// 1 in the middle of the uv space, fading to 0 towards its borders
+const edgesMask = (st: THREE.Node<"vec2">, margin: number, size: number) => {
+	const maskX = smoothstep(margin, size, st.x).mul(smoothstep(1.0 - size, 1.0 - margin, st.x).oneMinus());
+	const maskY = smoothstep(margin, size, st.y).mul(smoothstep(1.0 - size, 1.0 - margin, st.y).oneMinus());
+	return maskX.mul(maskY);
+};
 
-    // Water
-    float scale = 10.0;
-    float timeScale = 0.4;
-    float strength = 0.2;
+const mapPosition = (displacementMap: THREE.Texture, time: THREE.UniformNode<"float", number>) =>
+	Fn(() => {
+		const transformed = positionLocal.toVar();
+		// uv transformed by map.offset/repeat (vUv before r151), via the matrix the height map samples with
+		const mapUv = uniform(displacementMap.matrix).mul(vec3(uv(), 1)).xy;
+		const height = texture(displacementMap).x;
 
-    // vMapUv, vDisplacementMapUv: uv transformed by map.offset/repeat (both were vUv before r151)
-    float normalizedHeight = texture2D(displacementMap, vDisplacementMapUv).x;
-    float waterMask = 1.0 - step(0.37, normalizedHeight);
+		// Water
+		const scale = 10.0;
+		const timeScale = 0.4;
+		const strength = 0.2;
 
-    float noise1 = noise(vUv3 * vec2(noise(vMapUv), 1) * vec2(5.0 * scale, scale) + vec2(-time, time) * timeScale);
-    float noise2 = noise(vUv3 * vec2(1, noise(vUv3)) * vec2(scale, scale * 6.0) + vec2(time, -time) * timeScale);
-    float noise3 = noise(vMapUv * vec2(noise(vMapUv)) * vec2(3.0 * scale) + vec2(time, -time) * timeScale);
-    float noise4 = noise(vMapUv * vec2(noise(vUv3)) * vec2(scale * 3.0) + vec2(-time, time) * timeScale);
+		const waterMask = float(1.0).sub(step(0.37, height));
 
-    float noiseResult = (noise1 + noise2 + noise3 + noise4) / 4.0;
-    transformed.z -= waterMask * (noiseResult * strength - 0.07);
+		const noise1 = noise(uv().mul(vec2(noise(mapUv), 1)).mul(vec2(5.0 * scale, scale)).add(vec2(time.negate(), time).mul(timeScale)));
+		const noise2 = noise(uv().mul(vec2(1, noise(uv()))).mul(vec2(scale, scale * 6.0)).add(vec2(time, time.negate()).mul(timeScale)));
+		const noise3 = noise(mapUv.mul(vec2(noise(mapUv))).mul(vec2(3.0 * scale)).add(vec2(time, time.negate()).mul(timeScale)));
+		const noise4 = noise(mapUv.mul(vec2(noise(uv()))).mul(vec2(scale * 3.0)).add(vec2(time.negate(), time).mul(timeScale)));
 
-    //  Edges
-    float margin = 0.0;
-    float scaleX = 0.2;
-    float scaleY = 0.2;
-    float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
-    float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
-    float mask = 1.0 - maskX * maskY;
+		const noiseResult = noise1.add(noise2).add(noise3).add(noise4).div(4.0);
+		transformed.z.subAssign(waterMask.mul(noiseResult.mul(strength).sub(0.07)));
 
-    transformed.z -= mask * 0.2;
-`;
+		// Edges
+		transformed.z.subAssign(edgesMask(uv(), 0.0, 0.2).oneMinus().mul(0.2));
 
-const pars_frag = /*glsl*/ `
-    varying vec2 vUv3;
-`;
+		// Displacement
+		const displacementScale = asFloat(materialReference("displacementScale", "float"));
+		const displacementBias = asFloat(materialReference("displacementBias", "float"));
+		transformed.addAssign(normalLocal.normalize().mul(height.mul(displacementScale).add(displacementBias)));
 
-const alpha_edges_frag = /*glsl*/ `
-    float margin = 0.05;
-    float scaleX = 0.25;
-    float scaleY = 0.25;
-
-    float maskX = smoothstep(0.0 + margin, scaleX, vUv3.x) * (1.0 - smoothstep(1.0 - scaleX, 1.0 - margin, vUv3.x));
-    float maskY = smoothstep(0.0 + margin, scaleY, vUv3.y) * (1.0 - smoothstep(1.0 - scaleY, 1.0 - margin, vUv3.y));
-    float mask = maskX * maskY;
-
-    diffuseColor.a *= mask;
-`;
+		return transformed;
+	})();

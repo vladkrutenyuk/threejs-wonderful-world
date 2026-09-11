@@ -1,6 +1,6 @@
 import TWEEN from "@tweenjs/tween.js";
-import * as THREE from "three";
-import { legacyLightIntensity } from "../helpers/legacy-lights";
+import * as THREE from "three/webgpu";
+import { LegacyPointLight } from "../helpers/legacy-lights";
 import { Map } from "./Map";
 import { Marker } from "./Marker";
 
@@ -64,7 +64,7 @@ export class MapCursor {
 		this._mapHalfHeight = map.geometry.parameters.height / 2;
 		this._markersGroup = map.markersGroup;
 
-		this.pointLight = new THREE.PointLight(0xffffff, legacyLightIntensity(3), 0.5);
+		this.pointLight = new LegacyPointLight(0xffffff, 3, 0.5);
 		this.pointLight.position.z = 0.15;
 		this.scene.add(this.pointLight);
 
@@ -254,7 +254,7 @@ export class MapCursor {
 		);
 		this._lines.verticalBottom.position.x = this._lines.verticalTop.position.x;
 
-		this._lines.horizontalRight.geometry.dispose();
+		// setFromPoints() updates the existing position buffer in place (r170+)
 		this._lines.horizontalRight.geometry.setFromPoints([
 			new THREE.Vector3(this._mapHalfWidth, 0, 0),
 			new THREE.Vector3(
@@ -265,7 +265,6 @@ export class MapCursor {
 				0
 			),
 		]);
-		this._lines.horizontalLeft.geometry.dispose();
 		this._lines.horizontalLeft.geometry.setFromPoints([
 			new THREE.Vector3(-this._mapHalfWidth, 0, 0),
 			new THREE.Vector3(
@@ -277,7 +276,6 @@ export class MapCursor {
 			),
 		]);
 
-		this._lines.verticalTop.geometry.dispose();
 		this._lines.verticalTop.geometry.setFromPoints([
 			new THREE.Vector3(0, this._mapHalfHeight, 0),
 			new THREE.Vector3(
@@ -288,7 +286,6 @@ export class MapCursor {
 				0
 			),
 		]);
-		this._lines.verticalBottom.geometry.dispose();
 		this._lines.verticalBottom.geometry.setFromPoints([
 			new THREE.Vector3(0, -this._mapHalfHeight, 0),
 			new THREE.Vector3(

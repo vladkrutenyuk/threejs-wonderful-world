@@ -1,6 +1,6 @@
-import * as THREE from "three";
+import * as THREE from "three/webgpu";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
-import { legacyLightIntensity } from "../helpers/legacy-lights";
+import { LegacyPointLight, registerLegacyLights } from "../helpers/legacy-lights";
 
 // The scene was made with three r150: color management was off and the renderer output colors
 // as they are (LinearEncoding). Since r152 both default to sRGB, which shifts every color and
@@ -10,7 +10,7 @@ THREE.ColorManagement.enabled = false;
 export class World {
 	private readonly _canvasRootElement: HTMLElement;
 	private readonly _resizeObserver: ResizeObserver;
-	readonly renderer: THREE.WebGLRenderer;
+	readonly renderer: THREE.WebGPURenderer;
 	readonly scene: THREE.Scene;
 	readonly camera: THREE.PerspectiveCamera;
 	readonly light: THREE.PointLight;
@@ -28,9 +28,9 @@ export class World {
 			150
 		);
 
-		// stencil: r163 changed the default to false, keep r150's depth-stencil drawing buffer
-		this.renderer = new THREE.WebGLRenderer({ antialias: true, stencil: true });
+		this.renderer = new THREE.WebGPURenderer({ antialias: true, alpha: false });
 		this.renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
+		registerLegacyLights(this.renderer);
 		this.renderer.setPixelRatio(1.2);
 		// this.renderer.setPixelRatio(0.7)
 		this._canvasRootElement = document.getElementById(
@@ -48,12 +48,14 @@ export class World {
 		this._resizeObserver.observe(this._canvasRootElement);
 		this.resize();
 
-		// decay 0: no distance falloff, like a legacy light without `distance`
-		this.light = new THREE.PointLight(0xffffff, legacyLightIntensity(1.5), 0, 0);
+		this.light = new LegacyPointLight(0xffffff, 1.5);
 		this.light.position.set(0, 5, 10);
 		this.scene.add(this.light);
 
-		this.renderer.toneMapping = THREE.LinearToneMapping;
+		// r150 used LinearToneMapping, which with the default exposure only clamps colors to [0, 1],
+		// as the 8-bit canvas does anyway. In WebGPURenderer any tone mapping renders the scene into
+		// a half-float buffer first, where transparent layers blend unclamped, so keep it off.
+		this.renderer.toneMapping = THREE.NoToneMapping;
 
 		// Since r152 transparent objects are sorted by their bounding sphere center instead of the
 		// object origin, which flips the draw order of the map and a wonder at some camera angles.
@@ -63,12 +65,12 @@ export class World {
 		const depth = (object: THREE.Object3D) =>
 			origin.setFromMatrixPosition(object.matrixWorld).applyMatrix4(projScreenMatrix).z;
 		this.renderer.setTransparentSort((a, b) => {
-			if (a.groupOrder !== b.groupOrder) return a.groupOrder - b.groupOrder;
-			if (a.renderOrder !== b.renderOrder) return a.renderOrder - b.renderOrder;
+			if (a.groupOrder !== b.groupOrder) return a.groupOrder! - b.groupOrder!;
+			if (a.renderOrder !== b.renderOrder) return a.renderOrder! - b.renderOrder!;
 			projScreenMatrix.multiplyMatrices(this.camera.projectionMatrix, this.camera.matrixWorldInverse);
-			const za = depth(a.object);
-			const zb = depth(b.object);
-			return za !== zb ? zb - za : a.id - b.id;
+			const za = depth(a.object!);
+			const zb = depth(b.object!);
+			return za !== zb ? zb - za : a.id! - b.id!;
 		});
 
 		this.controls = new OrbitControls(this.camera, this.renderer.domElement);
@@ -99,11 +101,5 @@ export class World {
 			this._canvasRootElement.offsetWidth,
 			this._canvasRootElement.offsetHeight
 		);
-		// Since r162 the viewport is rounded to device pixels while the canvas size is still
-		// floored, e.g. 1443 * 1.2 = 1731.6 gives a 1732 px viewport on a 1731 px canvas and
-		// stretches the whole frame. Match the viewport to the canvas, as r150 did.
-		const pixelRatio = this.renderer.getPixelRatio();
-		const canvas = this.renderer.domElement;
-		this.renderer.setViewport(0, 0, canvas.width / pixelRatio, canvas.height / pixelRatio);
 	}
 }

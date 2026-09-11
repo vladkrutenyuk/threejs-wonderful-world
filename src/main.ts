@@ -16,8 +16,6 @@ function init() {
 	map.initMarkersAsync(tooltip).then(() => console.log("Markers initing was finished!"));
 
 	const mainUpdate = () => {
-		requestAnimationFrame(mainUpdate);
-
 		tooltip.update();
 		TWEEN.update();
 		mapCursor.update();
@@ -25,7 +23,8 @@ function init() {
 		world.update();
 	};
 
-	mainUpdate();
+	// WebGPURenderer initializes asynchronously, the loop starts once it's ready
+	world.renderer.setAnimationLoop(mainUpdate);
 
 	//! for behance
 	// world.scene.background = new THREE.Color(0x000000)
