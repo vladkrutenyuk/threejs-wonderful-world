@@ -4,8 +4,6 @@
 }
 
 body {
-	width: 100vw;
-	height: 100vh;
 	overflow: hidden;
 	/* the UI is laid out with the font's own line height */
 	line-height: normal;
@@ -13,9 +11,9 @@ body {
 	background-color: #101010;
 }
 
-#three-canvas-root {
-	width: 100vw;
-	height: 100vh;
+.canvas {
+	position: fixed;
+	inset: 0;
 }
 
 .header {

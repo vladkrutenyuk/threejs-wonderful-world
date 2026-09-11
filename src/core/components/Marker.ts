@@ -23,13 +23,14 @@ import {
 	vec3,
 	vec4,
 } from "three/tsl";
+import { Object3DBehaviour } from "three-start";
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { MarkerData } from "../constants/markers";
-import { $selectedMarkerId } from "../stores";
+import { MarkerData } from "../../constants/markers";
+import { $selectedMarkerId } from "../../stores";
 import { Map } from "./Map";
 
-export class Marker {
+export class Marker extends Object3DBehaviour {
 	public static readonly additionalOffsetZ = 0.07;
 	public static readonly multiplierScaleZ = 1.5;
 	public static readonly octahedronRadius = 0.025;
@@ -39,13 +40,14 @@ export class Marker {
 	}
 	private readonly _data: MarkerData;
 
-	public get markerMesh(): THREE.Mesh {
-		return this._markerMesh;
+	// invisible and a bit bigger than the marker, the cursor hovers it
+	public get hitMesh(): THREE.Mesh {
+		return this._hitMesh;
 	}
-	private readonly _markerMesh: THREE.Mesh;
-	private readonly _wireframeMesh: THREE.Mesh;
-	private readonly _shapeMesh: THREE.Mesh;
-	private readonly _ringMesh: THREE.Mesh;
+	private _hitMesh!: THREE.Mesh;
+	private _wireframeMesh!: THREE.Mesh;
+	private _shapeMesh!: THREE.Mesh;
+	private _ringMesh!: THREE.Mesh;
 
 	public get visualGroup(): THREE.Group {
 		return this._visualGroup;
@@ -58,7 +60,7 @@ export class Marker {
 	private _isSelected: boolean = false;
 
 	private _contentMesh!: THREE.Mesh;
-	private _contentMaterial: THREE.NodeMaterial;
+	private _contentMaterial!: THREE.NodeMaterial;
 
 	private _uniforms: ContentUniforms = {
 		matcap: texture(new THREE.TextureLoader().load("/img/matcap_1.png")),
@@ -69,8 +71,11 @@ export class Marker {
 	};
 
 	constructor(data: MarkerData) {
+		super();
 		this._data = data;
+	}
 
+	onAwake() {
 		const thickness = 0.0035;
 		const radius = 0.01;
 		this._ringMesh = new THREE.Mesh(
@@ -78,12 +83,11 @@ export class Marker {
 			new THREE.MeshBasicMaterial({ color: 0xffffff })
 		);
 
-		this._markerMesh = new THREE.Mesh(
+		this._hitMesh = new THREE.Mesh(
 			new THREE.OctahedronGeometry(0.05 + Marker.octahedronRadius),
 			new THREE.MeshBasicMaterial({ visible: false })
 		);
-		this._markerMesh.scale.setComponent(2, Marker.multiplierScaleZ);
-		this._markerMesh.userData.marker = this;
+		this._hitMesh.userData.marker = this;
 
 		this._wireframeMesh = new THREE.Mesh(
 			new THREE.OctahedronGeometry(Marker.octahedronRadius),
@@ -99,11 +103,18 @@ export class Marker {
 			})
 		);
 
+		this.object.scale.setComponent(2, Marker.multiplierScaleZ);
+		this._ringMesh.position.setZ(-Marker.octahedronRadius - 0.01);
+		this._visualGroup.add(this._shapeMesh, this._wireframeMesh, this._ringMesh);
+		this.object.add(this._hitMesh, this._visualGroup);
+
 		this._contentMaterial = new THREE.NodeMaterial();
 		this._contentMaterial.transparent = true;
 		this._contentMaterial.depthTest = true;
 		this._contentMaterial.vertexNode = contentVertex(this._uniforms);
 		this._contentMaterial.fragmentNode = contentFragment(this._uniforms);
+
+		this.loadModel();
 
 		$selectedMarkerId.listen((id) => {
 			const isSelected = id === this._data.id;
@@ -111,35 +122,7 @@ export class Marker {
 		});
 	}
 
-	public spawnOnMap = (
-		scene: THREE.Scene,
-		mapWidth: number,
-		mapHeight: number,
-		displacementScale: number,
-		displacementBias: number
-	): void => {
-		this._markerMesh.position.copy(
-			new THREE.Vector3(
-				mapWidth * (this._data.mapNormalizedPosition.x - 0.5),
-				mapHeight * (this._data.mapNormalizedPosition.y - 0.5),
-				this._data.mapNormalizedPosition.z * displacementScale +
-					displacementBias +
-					Marker.additionalOffsetZ
-			)
-		);
-		scene.add(this._markerMesh);
-		scene.add(this._visualGroup);
-		scene.add(this._wireframeMesh);
-		scene.add(this._ringMesh);
-		this._ringMesh.position.setZ(-Marker.octahedronRadius - 0.01);
-
-		this._visualGroup.add(this._shapeMesh, this._wireframeMesh, this._ringMesh);
-		this._visualGroup.parent = this._markerMesh;
-
-		this.loadModel(scene);
-	};
-
-	private loadModel = (scene: THREE.Scene) => {
+	private loadModel = () => {
 		this._uniforms.scale.value = this._data.contentScale;
 
 		const loader = new GLTFLoader();
@@ -157,7 +140,8 @@ export class Marker {
 						this._contentMesh.material = this._contentMaterial;
 						this._contentMesh.scale.setScalar(this.data.contentScale);
 
-						scene.add(this._contentMesh);
+						// the wonder stands at the world origin, apart from the zoomed marker
+						this.ctx.scene.add(this._contentMesh);
 
 						this._contentMesh.visible = false;
 					}
@@ -187,7 +171,7 @@ export class Marker {
 	private setSelection = (isSelected: boolean): void => {
 		this._isSelected = isSelected;
 
-		new TWEEN.Tween(this._markerMesh.rotation)
+		new TWEEN.Tween(this.object.rotation)
 			.to(
 				{
 					z: isSelected ? (6 * -Math.PI) / 2 : 0,

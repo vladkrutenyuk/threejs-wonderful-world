@@ -1,7 +1,8 @@
 import TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three/webgpu";
-import { LegacyPointLight } from "../helpers/legacy-lights";
-import { $hoveredMarker, $selectedMarkerId } from "../stores";
+import { Object3DBehaviour } from "three-start";
+import { LegacyPointLight } from "../../helpers/legacy-lights";
+import { $hoveredMarker, $selectedMarkerId } from "../../stores";
 import { Map } from "./Map";
 import { Marker } from "./Marker";
 
@@ -21,8 +22,8 @@ const RING_INIT_DATA: RingData = {
 	outerRadius: 0.0425,
 	thetaSegments: 16,
 };
-export class MapCursor {
-	readonly pointLight: THREE.PointLight;
+export class MapCursor extends Object3DBehaviour {
+	pointLight!: THREE.PointLight;
 	cursorGroup!: THREE.Group;
 	private ringMesh!: THREE.Mesh;
 	private ringMaterial!: THREE.MeshBasicMaterial;
@@ -35,12 +36,9 @@ export class MapCursor {
 	private quadCorners!: THREE.Group;
 	private readonly _cursorMargin = 0.02;
 
-	private scene: THREE.Scene;
-	private readonly camera: THREE.Camera;
-	private map: Map;
-	private _mapHalfWidth: number;
-	private _mapHalfHeight: number;
-	private _markersGroup: THREE.Group;
+	private readonly _map: Map;
+	private _mapHalfWidth = 0;
+	private _mapHalfHeight = 0;
 
 	private hoveredMarker: THREE.Object3D | null = null;
 	private _lastOveredMarkerPosition = new THREE.Vector3();
@@ -57,21 +55,29 @@ export class MapCursor {
 
 	private _isBlocked: boolean = false;
 
-	constructor(scene: THREE.Scene, camera: THREE.Camera, map: Map) {
-		this.scene = scene;
-		this.camera = camera;
-		this.map = map;
-		this._mapHalfWidth = map.geometry.parameters.width / 2;
-		this._mapHalfHeight = map.geometry.parameters.height / 2;
-		this._markersGroup = map.markersGroup;
+	constructor(map: Map) {
+		super();
+		this._map = map;
+	}
+
+	onAwake() {
+		this._mapHalfWidth = this._map.width / 2;
+		this._mapHalfHeight = this._map.height / 2;
 
 		this.pointLight = new LegacyPointLight(0xffffff, 3, 0.5);
 		this.pointLight.position.z = 0.15;
-		this.scene.add(this.pointLight);
+		this.object.add(this.pointLight);
 
 		this.initLines();
 		this.initCursor();
-		this.subscribeOnMouseEvents();
+
+		document.addEventListener("mousemove", this.onMouseMove, false);
+		document.addEventListener("click", this.onMouseClick, false);
+	}
+
+	onUpdate() {
+		this._enterExitTweenGroup.update();
+		this.setCursorPositionMagically();
 	}
 
 	private initCursor() {
@@ -114,7 +120,7 @@ export class MapCursor {
 			quadCornerLB
 		);
 		this.cursorGroup = new THREE.Group().add(this.ringMesh, this.quadCorners);
-		this.scene.add(this.cursorGroup);
+		this.object.add(this.cursorGroup);
 	}
 
 	private initLines() {
@@ -140,21 +146,13 @@ export class MapCursor {
 			new THREE.Vector3(RING_INIT_DATA.outerRadius + this._cursorMargin, 0, 0),
 		]);
 
-		const cursorLines: CursorLines = {
+		this._lines = {
 			horizontalLeft: new THREE.Line(horizontalLeftGeometry, lineMaterial),
 			horizontalRight: new THREE.Line(horizontalRightGeometry, lineMaterial),
 			verticalTop: new THREE.Line(verticalUpGeometry, lineMaterial),
 			verticalBottom: new THREE.Line(verticalDownGeometry, lineMaterial),
 		};
-		for (const key in cursorLines) {
-			this.scene.add((cursorLines as any)[key]);
-		}
-		this._lines = cursorLines;
-	}
-
-	private subscribeOnMouseEvents() {
-		document.addEventListener("mousemove", this.onMouseMove, false);
-		document.addEventListener("click", this.onMouseClick, false);
+		this.object.add(...Object.values(this._lines));
 	}
 
 	public onMouseMove = (event: MouseEvent) => {
@@ -166,14 +164,15 @@ export class MapCursor {
 			-(mousePosY / window.innerHeight) * 2 + 1
 		);
 
-		this._raycaster.setFromCamera(_vt, this.camera);
+		this._raycaster.setFromCamera(_vt, this.ctx.camera);
 
-		const mapIntersection = this._raycaster.intersectObject(this.map.mesh)[0];
+		const mapIntersection = this._raycaster.intersectObject(this._map.mesh)[0];
 
 		mapIntersection != null && this._onMapPosition.copy(mapIntersection.point);
 
 		const markerIntersection = this._raycaster.intersectObjects(
-			this._markersGroup.children
+			this._map.markers.map((marker) => marker.hitMesh),
+			false
 		)[0];
 
 		if (markerIntersection == null) {
@@ -213,11 +212,6 @@ export class MapCursor {
 			this._isBlocked = false;
 		}, Map.zoomDuration);
 	};
-
-	public update() {
-		this._enterExitTweenGroup.update();
-		this.setCursorPositionMagically();
-	}
 
 	private setCursorPositionMagically = () => {
 		let markerWorldPositionForLerp = new THREE.Vector3();

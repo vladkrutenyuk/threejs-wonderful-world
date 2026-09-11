@@ -1,5 +1,9 @@
 import { atom } from "nanostores";
 import type { MarkerData } from "./constants/markers";
+import type { World } from "./core/World";
+
+// The 3D world, null until it's created
+export const $world = atom<World | null>(null);
 
 // Id of the wonder the map is zoomed into, null while the whole map is shown
 export const $selectedMarkerId = atom<MarkerData["id"] | null>(null);

@@ -6,7 +6,6 @@ import {
 	float,
 	floor,
 	fract,
-	instancedBufferAttribute,
 	materialOpacity,
 	materialReference,
 	mix,
@@ -21,18 +20,20 @@ import {
 	vec2,
 	vec3,
 } from "three/tsl";
-import { MARKERS, type MarkerData } from "../constants/markers";
-import { $selectedMarkerId } from "../stores";
+import { addComponent, Object3DBehaviour } from "three-start";
+import { MARKERS, type MarkerData } from "../../constants/markers";
+import { $selectedMarkerId } from "../../stores";
+import { MapCursor } from "./MapCursor";
 import { Marker } from "./Marker";
 
-export class Map {
+export class Map extends Object3DBehaviour {
 	public readonly zoomScale = 10;
 	public static readonly zoomBackDelay = 550;
 	public static readonly zoomDuration = 2500;
 	private readonly zoomCenterOffsetY = 0.025;
 
-	readonly mesh: THREE.Mesh;
-	readonly geometry: THREE.PlaneGeometry;
+	mesh!: THREE.Mesh;
+	geometry!: THREE.PlaneGeometry;
 
 	public get width() {
 		return this.geometry.parameters.width;
@@ -40,25 +41,17 @@ export class Map {
 	public get height() {
 		return this.geometry.parameters.height;
 	}
-	private _material: THREE.MeshPhongNodeMaterial;
-
-	private readonly _scene: THREE.Scene;
+	private _material!: THREE.MeshPhongNodeMaterial;
 
 	private _markersGroup: THREE.Group = new THREE.Group();
-	public get markersGroup() {
-		return this._markersGroup;
-	}
 
-	private selectedMarker: THREE.Object3D | null = null;
-	private timer = new THREE.Timer();
+	private selectedMarker: Marker | null = null;
 	private time = uniform(0);
 
-	stars = new THREE.Group();
 	markers: Marker[] = [];
+	cursor!: MapCursor;
 
-	constructor(scene: THREE.Scene) {
-		this._scene = scene;
-
+	onAwake() {
 		const textureLoader = new THREE.TextureLoader();
 		const map = textureLoader.load("/img/world_color.jpg");
 		const specularMap = textureLoader.load("/img/world_specular.jpg");
@@ -95,66 +88,29 @@ export class Map {
 		this._material.opacityNode = edgesMask(uv(), 0.05, 0.25).mul(asFloat(materialOpacity));
 
 		this.mesh = new THREE.Mesh(this.geometry, this._material);
-		this._scene.add(this.mesh);
+		this.object.add(this.mesh, this._markersGroup);
 
-		this._scene.add(this._markersGroup);
+		const cursorObject = new THREE.Group();
+		this.object.add(cursorObject);
+		this.cursor = addComponent(cursorObject, MapCursor, this);
 
-		this.initStars();
+		for (const data of MARKERS) {
+			const markerObject = new THREE.Group();
+			markerObject.position.set(
+				this.width * (data.mapNormalizedPosition.x - 0.5),
+				this.height * (data.mapNormalizedPosition.y - 0.5),
+				this.getMarkerZ(data)
+			);
+			this._markersGroup.add(markerObject);
+			this.markers.push(addComponent(markerObject, Marker, data));
+		}
 
 		$selectedMarkerId.listen((id) => (id ? this.goToMarker(id) : this.backFromMarker()));
 	}
 
-	private initStars = (): void => {
-		const vertices = [];
-		const range = 50;
-		for (let i = 0; i < 10000; i++) {
-			const x = THREE.MathUtils.randFloatSpread(range);
-			const y = THREE.MathUtils.randFloatSpread(range);
-			const z = THREE.MathUtils.randFloatSpread(range);
-
-			if (Math.sqrt(x * x + y * y + z * z) > 5) vertices.push(x, y, z);
-		}
-
-		// WebGPU draws Points 1px wide whatever the size, so the stars are instanced sprites,
-		// which PointsNodeMaterial sizes the same way as PointsMaterial.
-		const positions = new THREE.InstancedBufferAttribute(new Float32Array(vertices), 3);
-		const material = new THREE.PointsNodeMaterial({ color: 0x505050, size: 0.08 });
-		material.positionNode = instancedBufferAttribute(positions);
-		const points = new THREE.Sprite(material);
-		points.count = positions.count;
-		points.frustumCulled = false;
-		this.stars.add(points);
-		this._scene.add(this.stars);
-	};
-
-	private animateWater() {
-		this.timer.update();
-		this.time.value = this.timer.getElapsed();
+	onUpdate() {
+		this.time.value = this.ctx.getTime();
 	}
-
-	public update() {
-		this.animateWater();
-	}
-
-	public initMarkersAsync = async () => {
-		try {
-			await MARKERS.forEach((markerData) => {
-				console.log("Marker <<" + markerData.title + ">> was inited");
-				const marker = new Marker(markerData);
-				this.markers.push(marker);
-				marker.spawnOnMap(
-					this._scene,
-					this.width,
-					this.height,
-					this._material.displacementScale,
-					this._material.displacementBias
-				);
-				this._markersGroup.add(marker.markerMesh);
-			});
-		} catch (e) {
-			console.log(e);
-		}
-	};
 
 	private goToMarker = (id: MarkerData["id"]): void => {
 		const marker = this.markers.find((marker) => marker.data.id === id);
@@ -162,7 +118,7 @@ export class Map {
 
 		const { x, y } = marker.data.mapNormalizedPosition;
 		this.setMapZoom(x, y, this.zoomScale);
-		this.selectedMarker = marker.markerMesh;
+		this.selectedMarker = marker;
 	};
 
 	private backFromMarker = (): void => {
@@ -217,30 +173,34 @@ export class Map {
 			this.geometry.parameters.height *
 			this.getCurrentScale();
 
-		this._markersGroup.children.forEach((markerObj) => {
+		this.markers.forEach((marker) => {
 			const unselectedMlt =
-				markerObj != this.selectedMarker
+				marker != this.selectedMarker
 					? Math.pow(
 							1 - (this.getCurrentScale() - 1) / (this.zoomScale - 1),
 							15
 					  )
 					: 1;
 
-			markerObj.scale.copy(
+			marker.object.scale.copy(
 				new THREE.Vector3(
 					1 / this.getCurrentScale(),
 					1 / this.getCurrentScale(),
 					(1 / this.getCurrentScale()) * Marker.multiplierScaleZ
 				).multiplyScalar(unselectedMlt)
 			);
-			markerObj.position.setZ(
-				(markerObj.userData.marker.data.mapNormalizedPosition.z *
-					this._material.displacementScale +
-					this._material.displacementBias +
-					Marker.additionalOffsetZ) *
-					this.getCurrentInverseScale()
-			);
+			marker.object.position.setZ(this.getMarkerZ(marker.data));
 		});
+	};
+
+	// a marker floats above its point of the displaced map
+	private getMarkerZ = (data: MarkerData): number => {
+		return (
+			(data.mapNormalizedPosition.z * this._material.displacementScale +
+				this._material.displacementBias +
+				Marker.additionalOffsetZ) *
+			this.getCurrentInverseScale()
+		);
 	};
 
 	private getCurrentInverseScale = (): number => {
