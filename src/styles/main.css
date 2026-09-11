@@ -1,0 +1,123 @@
+@font-face {
+	font-family: "JetBrainsMono Regular";
+	src: url("/fonts/JetBrainsMono/JetBrainsMono-Regular.woff") format("woff");
+}
+
+body {
+	width: 100vw;
+	height: 100vh;
+	overflow: hidden;
+	/* the UI is laid out with the font's own line height */
+	line-height: normal;
+	font-family: "JetBrainsMono Regular", monospace;
+	background-color: #101010;
+}
+
+#three-canvas-root {
+	width: 100vw;
+	height: 100vh;
+}
+
+.header {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	color: #f2f2f2;
+	text-align: center;
+	text-shadow: 1px 3px 0.4em black;
+	user-select: none;
+	z-index: 1;
+}
+
+.title {
+	margin: 10px 0;
+	padding: 5px;
+	font-size: 17px;
+	text-transform: uppercase;
+	transition: 200ms;
+}
+
+.title.small {
+	font-size: 12px;
+}
+
+.title.big {
+	font-size: 17px;
+	transition: 1500ms;
+}
+
+.wonder-title {
+	padding: 6px 8px 5px;
+	font-size: 17px;
+	text-transform: uppercase;
+	background-color: black;
+	border: 1px solid white;
+}
+
+.tooltip {
+	position: absolute;
+	padding: 6px;
+	font-size: 15px;
+	color: #f2f2f2;
+	text-shadow: 1px 3px 0.4em black;
+	text-transform: uppercase;
+	background-color: rgba(0, 0, 0, 0.75);
+}
+
+.footer {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	padding-bottom: 16px;
+	font-size: 13px;
+	color: #f2f2f2bb;
+	text-align: center;
+	text-shadow: 1px 3px 0.4em black;
+	user-select: none;
+	z-index: 1;
+}
+
+.footer a {
+	text-decoration: underline;
+}
+
+.hover-glow {
+	color: #f2f2f2;
+	text-shadow: 1px 3px 0.4em black;
+	cursor: pointer;
+}
+
+.hover-glow:hover {
+	color: white;
+	text-shadow: 1px 1px 0.5em white;
+}
+
+.mobile-blocker {
+	display: none;
+}
+
+.mobile-blocker code {
+	font-family: monospace;
+}
+
+@media only screen and (max-width: 768px) {
+	.mobile-blocker {
+		position: fixed;
+		top: 0;
+		left: 0;
+		width: 100vw;
+		height: 100vh;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		align-items: center;
+		color: white;
+		font-size: 16px;
+		text-align: center;
+		background-color: #101010;
+		z-index: 1;
+		pointer-events: none;
+	}
+}

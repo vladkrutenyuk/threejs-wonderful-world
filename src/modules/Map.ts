@@ -21,9 +21,9 @@ import {
 	vec2,
 	vec3,
 } from "three/tsl";
-import { MARKERS } from "../constants/markers";
+import { MARKERS, type MarkerData } from "../constants/markers";
+import { $selectedMarkerId } from "../stores";
 import { Marker } from "./Marker";
-import Tooltip from "./Tooltip";
 
 export class Map {
 	public readonly zoomScale = 10;
@@ -100,6 +100,8 @@ export class Map {
 		this._scene.add(this._markersGroup);
 
 		this.initStars();
+
+		$selectedMarkerId.listen((id) => (id ? this.goToMarker(id) : this.backFromMarker()));
 	}
 
 	private initStars = (): void => {
@@ -134,11 +136,11 @@ export class Map {
 		this.animateWater();
 	}
 
-	public initMarkersAsync = async (tooltip: Tooltip) => {
+	public initMarkersAsync = async () => {
 		try {
 			await MARKERS.forEach((markerData) => {
 				console.log("Marker <<" + markerData.title + ">> was inited");
-				const marker = new Marker(markerData, tooltip);
+				const marker = new Marker(markerData);
 				this.markers.push(marker);
 				marker.spawnOnMap(
 					this._scene,
@@ -154,17 +156,16 @@ export class Map {
 		}
 	};
 
-	public goToMarker = (markerObj: THREE.Object3D): void => {
-		this.setMapZoom(
-			markerObj.userData.marker.data.mapNormalizedPosition.x,
-			markerObj.userData.marker.data.mapNormalizedPosition.y,
-			this.zoomScale
-		);
+	private goToMarker = (id: MarkerData["id"]): void => {
+		const marker = this.markers.find((marker) => marker.data.id === id);
+		if (!marker) return;
 
-		this.selectedMarker = markerObj;
+		const { x, y } = marker.data.mapNormalizedPosition;
+		this.setMapZoom(x, y, this.zoomScale);
+		this.selectedMarker = marker.markerMesh;
 	};
 
-	public backFromMarker = (): void => {
+	private backFromMarker = (): void => {
 		this.setMapZoom(0.5, 0.5, 1);
 	};
 

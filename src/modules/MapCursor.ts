@@ -1,6 +1,7 @@
 import TWEEN from "@tweenjs/tween.js";
 import * as THREE from "three/webgpu";
 import { LegacyPointLight } from "../helpers/legacy-lights";
+import { $hoveredMarker, $selectedMarkerId } from "../stores";
 import { Map } from "./Map";
 import { Marker } from "./Marker";
 
@@ -197,14 +198,10 @@ export class MapCursor {
 		marker.visualGroup.scale.multiplyScalar(0.5);
 
 		if (marker.isSelected) {
-			marker.setSelection(false);
-			this.map.backFromMarker();
-
+			$selectedMarkerId.set(null);
 			console.log("Back from " + marker.data.title);
 		} else {
-			marker.setSelection(true);
-			this.map.goToMarker(markerObj);
-
+			$selectedMarkerId.set(marker.data.id);
 			console.log("Go to " + marker.data.title);
 		}
 
@@ -308,7 +305,12 @@ export class MapCursor {
 		document.body.style.cursor = "pointer";
 
 		const marker = <Marker>markerObject.userData.marker;
-		marker.setMouseOveringStyle(true, this._mouseScreenPosition);
+		marker.setMouseOveringStyle(true);
+		$hoveredMarker.set({
+			id: marker.data.id,
+			x: this._mouseScreenPosition.x,
+			y: this._mouseScreenPosition.y,
+		});
 
 		this._enterExitTweenGroup.removeAll();
 		this._enterExitTweenGroup = new TWEEN.Group();
@@ -338,7 +340,8 @@ export class MapCursor {
 		document.body.style.cursor = "default";
 
 		const marker = <Marker>markerObject.userData.marker;
-		marker.setMouseOveringStyle(false, this._mouseScreenPosition);
+		marker.setMouseOveringStyle(false);
+		$hoveredMarker.set(null);
 
 		this._enterExitTweenGroup.removeAll();
 

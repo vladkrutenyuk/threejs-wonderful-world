@@ -11,12 +11,18 @@ importers:
       '@tweenjs/tween.js':
         specifier: ^18.6.4
         version: 18.6.4
+      nanostores:
+        specifier: ^1.5.3
+        version: 1.5.3
       string-lerp:
         specifier: ^1.0.3
         version: 1.0.3
       three:
         specifier: 0.184.0
         version: 0.184.0
+      vanjs-core:
+        specifier: 1.6.1
+        version: 1.6.1
     devDependencies:
       '@types/three':
         specifier: ^0.184.1
@@ -411,6 +417,10 @@ packages:
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
     hasBin: true
 
+  nanostores@1.5.3:
+    resolution: {integrity: sha512-rQLB6eV4f2AW/n3L0JmwCROpaisYy9EDEADvEFSd1C/qG8hB6O5TPlh9A791JRbJr4CnMQBzptDcvD9OR1+6WA==}
+    engines: {node: ^20.0.0 || >=22.0.0}
+
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
@@ -488,6 +498,9 @@ packages:
 
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
+
+  vanjs-core@1.6.1:
+    resolution: {integrity: sha512-CPUteb4/iW3hB7TLTKI9A9YMRTAQFpPz5n1/+vfnPxNs2wOI9HvSg6K3B/9x+uycX8eefqopBcakr2vJeHgIgw==}
 
   vite@6.4.3:
     resolution: {integrity: sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A==}
@@ -785,6 +798,8 @@ snapshots:
 
   nanoid@3.3.19: {}
 
+  nanostores@1.5.3: {}
+
   picocolors@1.1.1: {}
 
   picomatch@4.0.7: {}
@@ -882,6 +897,8 @@ snapshots:
   typescript@5.9.3: {}
 
   util-deprecate@1.0.2: {}
+
+  vanjs-core@1.6.1: {}
 
   vite@6.4.3:
     dependencies:

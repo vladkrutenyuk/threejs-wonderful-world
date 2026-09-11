@@ -26,9 +26,8 @@ import {
 import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 import { MarkerData } from "../constants/markers";
-import Header, { HeaderStyle } from "./Header";
+import { $selectedMarkerId } from "../stores";
 import { Map } from "./Map";
-import Tooltip from "./Tooltip";
 
 export class Marker {
 	public static readonly additionalOffsetZ = 0.07;
@@ -60,7 +59,6 @@ export class Marker {
 
 	private _contentMesh!: THREE.Mesh;
 	private _contentMaterial: THREE.NodeMaterial;
-	private tooltip: Tooltip;
 
 	private _uniforms: ContentUniforms = {
 		matcap: texture(new THREE.TextureLoader().load("/img/matcap_1.png")),
@@ -70,8 +68,7 @@ export class Marker {
 		scale: uniform(1.0),
 	};
 
-	constructor(data: MarkerData, tooltip: Tooltip) {
-		this.tooltip = tooltip;
+	constructor(data: MarkerData) {
 		this._data = data;
 
 		const thickness = 0.0035;
@@ -107,6 +104,11 @@ export class Marker {
 		this._contentMaterial.depthTest = true;
 		this._contentMaterial.vertexNode = contentVertex(this._uniforms);
 		this._contentMaterial.fragmentNode = contentFragment(this._uniforms);
+
+		$selectedMarkerId.listen((id) => {
+			const isSelected = id === this._data.id;
+			if (isSelected !== this._isSelected) this.setSelection(isSelected);
+		});
 	}
 
 	public spawnOnMap = (
@@ -176,26 +178,13 @@ export class Marker {
 		);
 	};
 
-	public setMouseOveringStyle = (
-		isEntering: boolean,
-		mouseScreenPosition: THREE.Vector2
-	): void => {
+	public setMouseOveringStyle = (isEntering: boolean): void => {
 		new TWEEN.Tween(this._visualGroup.scale)
 			.to(new THREE.Vector3().setScalar(isEntering ? 1.3 : 1), 250)
 			.start();
-
-		if (isEntering) {
-			this.tooltip.set({
-				text: this._isSelected ? "< back" : "> " + this._data.title,
-				x: mouseScreenPosition.x,
-				y: mouseScreenPosition.y,
-			});
-		} else {
-			this.tooltip.reset();
-		}
 	};
 
-	public setSelection = (isSelected: boolean): void => {
+	private setSelection = (isSelected: boolean): void => {
 		this._isSelected = isSelected;
 
 		new TWEEN.Tween(this._markerMesh.rotation)
@@ -218,9 +207,6 @@ export class Marker {
 	};
 
 	private showContent = () => {
-		Header.setTitleStyle(HeaderStyle.SubtitleForWonder);
-		Header.setWonderTitle(this.data.title, this.data.url);
-
 		const duration = 2500;
 		this._uniforms.transition.value = 0;
 		new TWEEN.Tween(this._uniforms)
@@ -236,9 +222,6 @@ export class Marker {
 	};
 
 	private hideContent = () => {
-		Header.setTitleStyle(HeaderStyle.AloneHeader);
-		Header.resetWonderTitle();
-
 		const duration = 600;
 		new TWEEN.Tween(this._uniforms)
 			.to({ transition: { value: 0 } }, duration)
