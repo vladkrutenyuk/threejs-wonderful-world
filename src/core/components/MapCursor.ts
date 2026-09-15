@@ -1,4 +1,4 @@
-import TWEEN from "@tweenjs/tween.js";
+import { Group, Tween } from "@tweenjs/tween.js";
 import * as THREE from "three/webgpu";
 import { Object3DBehaviour } from "three-start";
 import { LegacyPointLight } from "../../helpers/legacy-lights";
@@ -43,7 +43,8 @@ export class MapCursor extends Object3DBehaviour {
 	private hoveredMarker: THREE.Object3D | null = null;
 	private _lastOveredMarkerPosition = new THREE.Vector3();
 
-	private _enterExitTweenGroup = new TWEEN.Group();
+	// every marker enter/exit replaces its tweens, so the finished ones don't pile up in the group
+	private _enterExitTweenGroup = new Group();
 
 	private _raycaster = new THREE.Raycaster();
 	private _onMapPosition = new THREE.Vector3();
@@ -307,14 +308,13 @@ export class MapCursor extends Object3DBehaviour {
 		});
 
 		this._enterExitTweenGroup.removeAll();
-		this._enterExitTweenGroup = new TWEEN.Group();
 
-		new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
+		new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
 			.to({ value: 0.9 }, this._magnetizationToMarker.duration)
 			.start();
 
 		let tempColor = { hex: this.ringMaterial.color.getHex() };
-		new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
+		new Tween(tempColor, this._enterExitTweenGroup)
 			.to(
 				{
 					hex: new THREE.Color(0x000000).getHex(),
@@ -339,12 +339,12 @@ export class MapCursor extends Object3DBehaviour {
 
 		this._enterExitTweenGroup.removeAll();
 
-		new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
+		new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
 			.to({ value: 0 }, this._magnetizationToMarker.duration)
 			.start();
 
 		let tempColor = { hex: this.ringMaterial.color.getHex() };
-		new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
+		new Tween(tempColor, this._enterExitTweenGroup)
 			.to(
 				{
 					hex: new THREE.Color(0xffffff).getHex(),
@@ -363,7 +363,7 @@ export class MapCursor extends Object3DBehaviour {
 		thetaSegments: number,
 		duration: number
 	): void => {
-		new TWEEN.Tween(this.ringData, this._enterExitTweenGroup)
+		new Tween(this.ringData, this._enterExitTweenGroup)
 			.to({ innerRadius, outerRadius, thetaSegments }, duration)
 			.start()
 			.onUpdate(() => {

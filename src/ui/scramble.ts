@@ -1,4 +1,4 @@
-import { Tween } from "@tweenjs/tween.js";
+import { Group, Tween } from "@tweenjs/tween.js";
 import type { State } from "vanjs-core";
 //@ts-ignore
 import stringLerp from "string-lerp";
@@ -13,6 +13,21 @@ const randomString = (length: number) => {
 	return result;
 };
 
+// The UI lives outside the world's loop, so its tweens tick on their own while any of them plays
+const group = new Group();
+let frame = 0;
+
+const tick = () => {
+	group.update();
+	if (group.allStopped()) {
+		// finished and stopped tweens stay in a group until removed
+		group.removeAll();
+		frame = 0;
+	} else {
+		frame = requestAnimationFrame(tick);
+	}
+};
+
 const tweens = new WeakMap<State<string>, Tween<{ value: number }>>();
 
 // Types `text` into `target` out of random characters
@@ -25,7 +40,7 @@ export const scramble = (
 ) => {
 	stopScramble(target);
 	const progress = { value: 0 };
-	const tween = new Tween(progress)
+	const tween = new Tween(progress, group)
 		.to({ value: 1 }, duration)
 		.delay(delay)
 		.onStart(() => onStart?.())
@@ -35,6 +50,7 @@ export const scramble = (
 		})
 		.start();
 	tweens.set(target, tween);
+	if (!frame) frame = requestAnimationFrame(tick);
 };
 
 export const stopScramble = (target: State<string>) => {

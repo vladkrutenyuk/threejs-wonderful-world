@@ -4,7 +4,6 @@ import { LegacyPointLight, registerLegacyLights } from "../helpers/legacy-lights
 import { Map } from "./components/Map";
 import { Stars } from "./components/Stars";
 import { CameraController } from "./modules/CameraController";
-import { Tweens } from "./modules/Tweens";
 
 // The scene was made with three r150: color management was off and the renderer output colors
 // as they are (LinearEncoding). Since r152 both default to sRGB, which shifts every color and
@@ -13,7 +12,6 @@ THREE.ColorManagement.enabled = false;
 
 export type WorldModules = {
 	cameraController: CameraController;
-	tweens: Tweens;
 };
 
 declare module "three-start" {
@@ -61,7 +59,6 @@ export class World extends ThreeStart {
 
 		this.addModules({
 			cameraController: new CameraController(),
-			tweens: new Tweens(),
 		});
 
 		const scene = this.ctx.scene;

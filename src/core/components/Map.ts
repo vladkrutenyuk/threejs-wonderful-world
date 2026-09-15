@@ -1,4 +1,4 @@
-import TWEEN, { Tween } from "@tweenjs/tween.js";
+import { Easing, Group, Tween } from "@tweenjs/tween.js";
 import * as THREE from "three/webgpu";
 import {
 	Fn,
@@ -47,6 +47,9 @@ export class Map extends Object3DBehaviour {
 
 	private selectedMarker: Marker | null = null;
 	private time = uniform(0);
+
+	// a new zoom replaces the running one, so the finished tweens don't pile up in the group
+	private _zoomTweens = new Group();
 
 	markers: Marker[] = [];
 	cursor!: MapCursor;
@@ -109,6 +112,7 @@ export class Map extends Object3DBehaviour {
 	}
 
 	onUpdate() {
+		this._zoomTweens.update();
 		this.time.value = this.ctx.getTime();
 	}
 
@@ -127,7 +131,8 @@ export class Map extends Object3DBehaviour {
 
 	private setMapZoom = (x: number, y: number, scale: number): void => {
 		const isGoingBack = scale < this.zoomScale;
-		new Tween(this._material)
+		this._zoomTweens.removeAll();
+		new Tween(this._material, this._zoomTweens)
 			.to(
 				{
 					map: {
@@ -147,7 +152,7 @@ export class Map extends Object3DBehaviour {
 				},
 				Map.zoomDuration
 			)
-			.easing(isGoingBack ? TWEEN.Easing.Cubic.InOut : TWEEN.Easing.Quadratic.InOut)
+			.easing(isGoingBack ? Easing.Cubic.InOut : Easing.Quadratic.InOut)
 			.delay(isGoingBack ? Map.zoomBackDelay : 0)
 			.start()
 			.onUpdate(() => {

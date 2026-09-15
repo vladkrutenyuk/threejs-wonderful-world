@@ -1,4 +1,4 @@
-import TWEEN from "@tweenjs/tween.js";
+import { Easing, Group, Tween } from "@tweenjs/tween.js";
 import * as THREE from "three/webgpu";
 import {
 	Fn,
@@ -58,6 +58,11 @@ export class Marker extends Object3DBehaviour {
 		return this._isSelected;
 	}
 	private _isSelected: boolean = false;
+
+	// A new hover or selection replaces the running tweens of its group, so the finished ones
+	// don't pile up. The groups are separate, as a click both selects and ends the hover.
+	private _hoverTweens = new Group();
+	private _selectionTweens = new Group();
 
 	private _contentMesh!: THREE.Mesh;
 	private _contentMaterial!: THREE.NodeMaterial;
@@ -122,6 +127,11 @@ export class Marker extends Object3DBehaviour {
 		});
 	}
 
+	onUpdate() {
+		this._hoverTweens.update();
+		this._selectionTweens.update();
+	}
+
 	private loadModel = () => {
 		this._uniforms.scale.value = this._data.contentScale;
 
@@ -163,15 +173,17 @@ export class Marker extends Object3DBehaviour {
 	};
 
 	public setMouseOveringStyle = (isEntering: boolean): void => {
-		new TWEEN.Tween(this._visualGroup.scale)
+		this._hoverTweens.removeAll();
+		new Tween(this._visualGroup.scale, this._hoverTweens)
 			.to(new THREE.Vector3().setScalar(isEntering ? 1.3 : 1), 250)
 			.start();
 	};
 
 	private setSelection = (isSelected: boolean): void => {
 		this._isSelected = isSelected;
+		this._selectionTweens.removeAll();
 
-		new TWEEN.Tween(this.object.rotation)
+		new Tween(this.object.rotation, this._selectionTweens)
 			.to(
 				{
 					z: isSelected ? (6 * -Math.PI) / 2 : 0,
@@ -179,9 +191,8 @@ export class Marker extends Object3DBehaviour {
 				},
 				2000
 			)
-			.easing(TWEEN.Easing.Exponential.In)
-			.start()
-			.onUpdate(() => {});
+			.easing(Easing.Exponential.In)
+			.start();
 
 		if (this._isSelected) {
 			this.showContent();
@@ -193,11 +204,11 @@ export class Marker extends Object3DBehaviour {
 	private showContent = () => {
 		const duration = 2500;
 		this._uniforms.transition.value = 0;
-		new TWEEN.Tween(this._uniforms)
+		new Tween(this._uniforms, this._selectionTweens)
 			.to({ transition: { value: 1 } }, duration)
 			.delay(Map.zoomDuration)
 			.start()
-			.easing(TWEEN.Easing.Quadratic.In)
+			.easing(Easing.Quadratic.In)
 			.onStart(() => {
 				this._contentMesh.visible = this._isSelected;
 				this.blinkMarkerShape(duration);
@@ -207,10 +218,10 @@ export class Marker extends Object3DBehaviour {
 
 	private hideContent = () => {
 		const duration = 600;
-		new TWEEN.Tween(this._uniforms)
+		new Tween(this._uniforms, this._selectionTweens)
 			.to({ transition: { value: 0 } }, duration)
 			.start()
-			.easing(TWEEN.Easing.Quadratic.In)
+			.easing(Easing.Quadratic.In)
 			.onStart(() => {
 				this.blinkMarkerShape(duration);
 				this.pulseMarkerWireframe(duration);
@@ -224,14 +235,13 @@ export class Marker extends Object3DBehaviour {
 		const shapeMaterial = <THREE.MeshBasicMaterial>this._shapeMesh.material;
 		const tempColor = { hex: shapeMaterial.color.getHex() };
 
-		const goTo = new TWEEN.Tween(tempColor)
+		const goTo = new Tween(tempColor, this._selectionTweens)
 			.to({ hex: new THREE.Color(0xffffff).getHex() }, duration / 2)
-			.start()
 			.onUpdate(() => {
 				shapeMaterial.color.setHex(tempColor.hex);
 			});
 
-		const goBack = new TWEEN.Tween(tempColor)
+		const goBack = new Tween(tempColor, this._selectionTweens)
 			.to({ hex: new THREE.Color(0x000000).getHex() }, duration / 2)
 			.onUpdate(() => {
 				shapeMaterial.color.setHex(tempColor.hex);
@@ -241,13 +251,13 @@ export class Marker extends Object3DBehaviour {
 	};
 
 	private pulseMarkerWireframe = (duration: number) => {
-		const first = new TWEEN.Tween(this._wireframeMesh)
+		const first = new Tween(this._wireframeMesh, this._selectionTweens)
 			.to({ scale: new THREE.Vector3().setScalar(0.5) }, duration * 0.8)
-			.easing(TWEEN.Easing.Quartic.Out);
+			.easing(Easing.Quartic.Out);
 
-		const second = new TWEEN.Tween(this._wireframeMesh)
+		const second = new Tween(this._wireframeMesh, this._selectionTweens)
 			.to({ scale: new THREE.Vector3().setScalar(1) }, duration * 0.2)
-			.easing(TWEEN.Easing.Quartic.Out);
+			.easing(Easing.Quartic.Out);
 
 		first.start().onComplete(() => second.start());
 	};
