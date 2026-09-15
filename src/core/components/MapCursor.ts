@@ -1,5 +1,8 @@
-import TWEEN from "@tweenjs/tween.js";
-import * as THREE from "three";
+import { Group, Tween } from "@tweenjs/tween.js";
+import * as THREE from "three/webgpu";
+import { Object3DBehaviour } from "three-start";
+import { LegacyPointLight } from "../../helpers/legacy-lights";
+import { $hoveredMarker, $selectedMarkerId } from "../../stores";
 import { Map } from "./Map";
 import { Marker } from "./Marker";
 
@@ -19,8 +22,8 @@ const RING_INIT_DATA: RingData = {
 	outerRadius: 0.0425,
 	thetaSegments: 16,
 };
-export class MapCursor {
-	readonly pointLight: THREE.PointLight;
+export class MapCursor extends Object3DBehaviour {
+	pointLight!: THREE.PointLight;
 	cursorGroup!: THREE.Group;
 	private ringMesh!: THREE.Mesh;
 	private ringMaterial!: THREE.MeshBasicMaterial;
@@ -33,17 +36,15 @@ export class MapCursor {
 	private quadCorners!: THREE.Group;
 	private readonly _cursorMargin = 0.02;
 
-	private scene: THREE.Scene;
-	private readonly camera: THREE.Camera;
-	private map: Map;
-	private _mapHalfWidth: number;
-	private _mapHalfHeight: number;
-	private _markersGroup: THREE.Group;
+	private readonly _map: Map;
+	private _mapHalfWidth = 0;
+	private _mapHalfHeight = 0;
 
 	private hoveredMarker: THREE.Object3D | null = null;
 	private _lastOveredMarkerPosition = new THREE.Vector3();
 
-	private _enterExitTweenGroup = new TWEEN.Group();
+	// every marker enter/exit replaces its tweens, so the finished ones don't pile up in the group
+	private _enterExitTweenGroup = new Group();
 
 	private _raycaster = new THREE.Raycaster();
 	private _onMapPosition = new THREE.Vector3();
@@ -55,21 +56,29 @@ export class MapCursor {
 
 	private _isBlocked: boolean = false;
 
-	constructor(scene: THREE.Scene, camera: THREE.Camera, map: Map) {
-		this.scene = scene;
-		this.camera = camera;
-		this.map = map;
-		this._mapHalfWidth = map.geometry.parameters.width / 2;
-		this._mapHalfHeight = map.geometry.parameters.height / 2;
-		this._markersGroup = map.markersGroup;
+	constructor(map: Map) {
+		super();
+		this._map = map;
+	}
 
-		this.pointLight = new THREE.PointLight(0xffffff, 3, 0.5);
+	onAwake() {
+		this._mapHalfWidth = this._map.width / 2;
+		this._mapHalfHeight = this._map.height / 2;
+
+		this.pointLight = new LegacyPointLight(0xffffff, 3, 0.5);
 		this.pointLight.position.z = 0.15;
-		this.scene.add(this.pointLight);
+		this.object.add(this.pointLight);
 
 		this.initLines();
 		this.initCursor();
-		this.subscribeOnMouseEvents();
+
+		document.addEventListener("mousemove", this.onMouseMove, false);
+		document.addEventListener("click", this.onMouseClick, false);
+	}
+
+	onUpdate() {
+		this._enterExitTweenGroup.update();
+		this.setCursorPositionMagically();
 	}
 
 	private initCursor() {
@@ -112,7 +121,7 @@ export class MapCursor {
 			quadCornerLB
 		);
 		this.cursorGroup = new THREE.Group().add(this.ringMesh, this.quadCorners);
-		this.scene.add(this.cursorGroup);
+		this.object.add(this.cursorGroup);
 	}
 
 	private initLines() {
@@ -138,21 +147,13 @@ export class MapCursor {
 			new THREE.Vector3(RING_INIT_DATA.outerRadius + this._cursorMargin, 0, 0),
 		]);
 
-		const cursorLines: CursorLines = {
+		this._lines = {
 			horizontalLeft: new THREE.Line(horizontalLeftGeometry, lineMaterial),
 			horizontalRight: new THREE.Line(horizontalRightGeometry, lineMaterial),
 			verticalTop: new THREE.Line(verticalUpGeometry, lineMaterial),
 			verticalBottom: new THREE.Line(verticalDownGeometry, lineMaterial),
 		};
-		for (const key in cursorLines) {
-			this.scene.add((cursorLines as any)[key]);
-		}
-		this._lines = cursorLines;
-	}
-
-	private subscribeOnMouseEvents() {
-		document.addEventListener("mousemove", this.onMouseMove, false);
-		document.addEventListener("click", this.onMouseClick, false);
+		this.object.add(...Object.values(this._lines));
 	}
 
 	public onMouseMove = (event: MouseEvent) => {
@@ -164,14 +165,15 @@ export class MapCursor {
 			-(mousePosY / window.innerHeight) * 2 + 1
 		);
 
-		this._raycaster.setFromCamera(_vt, this.camera);
+		this._raycaster.setFromCamera(_vt, this.ctx.camera);
 
-		const mapIntersection = this._raycaster.intersectObject(this.map.mesh)[0];
+		const mapIntersection = this._raycaster.intersectObject(this._map.mesh)[0];
 
 		mapIntersection != null && this._onMapPosition.copy(mapIntersection.point);
 
 		const markerIntersection = this._raycaster.intersectObjects(
-			this._markersGroup.children
+			this._map.markers.map((marker) => marker.hitMesh),
+			false
 		)[0];
 
 		if (markerIntersection == null) {
@@ -196,14 +198,10 @@ export class MapCursor {
 		marker.visualGroup.scale.multiplyScalar(0.5);
 
 		if (marker.isSelected) {
-			marker.setSelection(false);
-			this.map.backFromMarker();
-
+			$selectedMarkerId.set(null);
 			console.log("Back from " + marker.data.title);
 		} else {
-			marker.setSelection(true);
-			this.map.goToMarker(markerObj);
-
+			$selectedMarkerId.set(marker.data.id);
 			console.log("Go to " + marker.data.title);
 		}
 
@@ -215,11 +213,6 @@ export class MapCursor {
 			this._isBlocked = false;
 		}, Map.zoomDuration);
 	};
-
-	public update() {
-		this._enterExitTweenGroup.update();
-		this.setCursorPositionMagically();
-	}
 
 	private setCursorPositionMagically = () => {
 		let markerWorldPositionForLerp = new THREE.Vector3();
@@ -253,7 +246,7 @@ export class MapCursor {
 		);
 		this._lines.verticalBottom.position.x = this._lines.verticalTop.position.x;
 
-		this._lines.horizontalRight.geometry.dispose();
+		// setFromPoints() updates the existing position buffer in place (r170+)
 		this._lines.horizontalRight.geometry.setFromPoints([
 			new THREE.Vector3(this._mapHalfWidth, 0, 0),
 			new THREE.Vector3(
@@ -264,7 +257,6 @@ export class MapCursor {
 				0
 			),
 		]);
-		this._lines.horizontalLeft.geometry.dispose();
 		this._lines.horizontalLeft.geometry.setFromPoints([
 			new THREE.Vector3(-this._mapHalfWidth, 0, 0),
 			new THREE.Vector3(
@@ -276,7 +268,6 @@ export class MapCursor {
 			),
 		]);
 
-		this._lines.verticalTop.geometry.dispose();
 		this._lines.verticalTop.geometry.setFromPoints([
 			new THREE.Vector3(0, this._mapHalfHeight, 0),
 			new THREE.Vector3(
@@ -287,7 +278,6 @@ export class MapCursor {
 				0
 			),
 		]);
-		this._lines.verticalBottom.geometry.dispose();
 		this._lines.verticalBottom.geometry.setFromPoints([
 			new THREE.Vector3(0, -this._mapHalfHeight, 0),
 			new THREE.Vector3(
@@ -310,17 +300,21 @@ export class MapCursor {
 		document.body.style.cursor = "pointer";
 
 		const marker = <Marker>markerObject.userData.marker;
-		marker.setMouseOveringStyle(true, this._mouseScreenPosition);
+		marker.setMouseOveringStyle(true);
+		$hoveredMarker.set({
+			id: marker.data.id,
+			x: this._mouseScreenPosition.x,
+			y: this._mouseScreenPosition.y,
+		});
 
 		this._enterExitTweenGroup.removeAll();
-		this._enterExitTweenGroup = new TWEEN.Group();
 
-		new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
+		new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
 			.to({ value: 0.9 }, this._magnetizationToMarker.duration)
 			.start();
 
 		let tempColor = { hex: this.ringMaterial.color.getHex() };
-		new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
+		new Tween(tempColor, this._enterExitTweenGroup)
 			.to(
 				{
 					hex: new THREE.Color(0x000000).getHex(),
@@ -340,16 +334,17 @@ export class MapCursor {
 		document.body.style.cursor = "default";
 
 		const marker = <Marker>markerObject.userData.marker;
-		marker.setMouseOveringStyle(false, this._mouseScreenPosition);
+		marker.setMouseOveringStyle(false);
+		$hoveredMarker.set(null);
 
 		this._enterExitTweenGroup.removeAll();
 
-		new TWEEN.Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
+		new Tween(this._magnetizationToMarker, this._enterExitTweenGroup)
 			.to({ value: 0 }, this._magnetizationToMarker.duration)
 			.start();
 
 		let tempColor = { hex: this.ringMaterial.color.getHex() };
-		new TWEEN.Tween(tempColor, this._enterExitTweenGroup)
+		new Tween(tempColor, this._enterExitTweenGroup)
 			.to(
 				{
 					hex: new THREE.Color(0xffffff).getHex(),
@@ -368,7 +363,7 @@ export class MapCursor {
 		thetaSegments: number,
 		duration: number
 	): void => {
-		new TWEEN.Tween(this.ringData, this._enterExitTweenGroup)
+		new Tween(this.ringData, this._enterExitTweenGroup)
 			.to({ innerRadius, outerRadius, thetaSegments }, duration)
 			.start()
 			.onUpdate(() => {

@@ -1,4 +1,5 @@
 export type MarkerData = {
+	id: string
 	title: string
 	mapNormalizedPosition: {
 		x: number
@@ -12,6 +13,7 @@ export type MarkerData = {
 
 export const MARKERS: MarkerData[] = [
 	{
+		id: 'colosseum',
 		title: 'Colosseum',
 		mapNormalizedPosition: {
 			x: 0.536,
@@ -23,6 +25,7 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.2,
 	},
 	{
+		id: 'great-wall',
 		title: 'Great Wall of China',
 		mapNormalizedPosition: {
 			x: 0.85,
@@ -34,6 +37,7 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.4,
 	},
 	{
+		id: 'machu-picchu',
 		title: 'Machu Picchu',
 		mapNormalizedPosition: {
 			x: 0.3,
@@ -45,6 +49,7 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.25,
 	},
 	{
+		id: 'petra',
 		title: 'Petra',
 		mapNormalizedPosition: {
 			x: 0.6,
@@ -56,6 +61,7 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.5,
 	},
 	{
+		id: 'taj-mahal',
 		title: 'Taj Mahal',
 		mapNormalizedPosition: {
 			x: 0.7,
@@ -67,6 +73,7 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.35,
 	},
 	{
+		id: 'christ-the-redeemer',
 		title: 'Christ the Redeemer',
 		mapNormalizedPosition: {
 			x: 0.38,
@@ -78,6 +85,7 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.5,
 	},
 	{
+		id: 'chichen-itza',
 		title: 'Chichen Itza',
 		mapNormalizedPosition: {
 			x: 0.26,
@@ -89,3 +97,5 @@ export const MARKERS: MarkerData[] = [
 		contentScale: 0.25,
 	},
 ]
+
+export const getMarkerData = (id: MarkerData['id'] | null) => MARKERS.find((marker) => marker.id === id) ?? null
